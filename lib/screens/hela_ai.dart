@@ -82,18 +82,41 @@ class _HelaAIState extends State<HelaAI> {
     });
   }
 
-  void handleGeminiResponse(String responseBody) {
-    try {
-      var decodedValue = jsonDecode(responseBody);
-      var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
-      print(result);
+void handleGeminiResponse(String responseBody) {
+  try {
+    var decodedValue = jsonDecode(responseBody);
+    var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
 
-      // Translate and show the content
-      translateAndShowGeminiContent(result);
-    } catch (e) {
-      print("Error handling Gemini response: $e");
+    // Split text at ** and store segments in a list
+    List<String> textSegments = result.split("**");
+
+    // Reconstruct the text with bold formatting using RichText widget
+    List<TextSpan> textSpans = [];
+    for (int i = 0; i < textSegments.length; i++) {
+      if (i % 2 == 1) { // If it's an odd-indexed segment (bold part)
+        textSpans.add(TextSpan(text: textSegments[i], style: TextStyle(fontWeight: FontWeight.bold)));
+      } else {
+        textSpans.add(TextSpan(text: textSegments[i]));
+      }
     }
+
+    // Create a RichText widget to display the formatted text
+    RichText richText = RichText(
+      text: TextSpan(children: textSpans),
+    );
+
+    // Convert RichText to a plain String for the function call
+    String plainText = richText.text.toPlainText();
+
+    translateAndShowGeminiContent(plainText);
+
+  } catch (e) {
+    print("Error handling Gemini response: $e");
   }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
