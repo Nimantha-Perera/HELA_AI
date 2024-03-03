@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hela_ai/themprovider/theam.dart';
 import 'package:provider/provider.dart';
- // Import your ThemeProvider class
+// Import your ThemeProvider class
 
 class SideNav extends StatelessWidget {
   const SideNav({Key? key});
@@ -15,6 +15,7 @@ class SideNav extends StatelessWidget {
           DrawerHeader(
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 109, 109, 109),
+              borderRadius: BorderRadius.zero, // Remove default border radius
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,12 +56,16 @@ class SideNav extends StatelessWidget {
           // ),
           ListTile(
             leading: Icon(Icons.brightness_6), // Icon for dark mode toggle
-            title: Text('Toggle Dark Mode'),
+            title: Text(
+              Provider.of<ThemeProvider>(context).isDarkMode
+                  ? 'Light Mode'
+                  : 'Dark Mode',
+            ),
             onTap: () {
               Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
           ),
-          
+
           ListTile(
             title: Center(
               child: Text(

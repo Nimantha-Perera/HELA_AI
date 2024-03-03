@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 
@@ -82,46 +85,93 @@ class _HelaAIState extends State<HelaAI> {
     });
   }
 
-void handleGeminiResponse(String responseBody) {
-  try {
-    var decodedValue = jsonDecode(responseBody);
-    var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
+  void handleGeminiResponse(String responseBody) {
+    try {
+      var decodedValue = jsonDecode(responseBody);
+      var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
 
-    // Split text at ** and store segments in a list
-    List<String> textSegments = result.split("**");
+      // Split text at ** and store segments in a list
+      List<String> textSegments = result.split("**");
 
-    // Reconstruct the text with bold formatting using RichText widget
-    List<TextSpan> textSpans = [];
-    for (int i = 0; i < textSegments.length; i++) {
-      if (i % 2 == 1) { // If it's an odd-indexed segment (bold part)
-       textSpans.add(TextSpan(
-  text: textSegments[i],
-  style: TextStyle(fontWeight: FontWeight.bold ,color: Colors.white),
-));
-
-      } else {
-        textSpans.add(TextSpan(text: textSegments[i],style:TextStyle(fontSize: 16,color: Colors.white)));
-        print("error bold");
+      // Reconstruct the text with bold formatting using RichText widget
+      List<TextSpan> textSpans = [];
+      for (int i = 0; i < textSegments.length; i++) {
+        if (i % 2 == 1) {
+          // If it's an odd-indexed segment (bold part)
+          textSpans.add(TextSpan(
+            text: textSegments[i],
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ));
+        } else {
+          textSpans.add(TextSpan(
+              text: textSegments[i],
+              style: TextStyle(fontSize: 16, color: Colors.white)));
+          print("error bold");
+        }
       }
+
+      // Create a RichText widget to display the formatted text
+      RichText richText = RichText(
+        text: TextSpan(children: textSpans),
+      );
+
+      // Convert RichText to a plain String for the function call
+      String plainText = richText.text.toPlainText();
+
+      translateAndShowGeminiContent(plainText);
+    } catch (e) {
+      print("Error handling Gemini response: $e");
     }
-
-    // Create a RichText widget to display the formatted text
-    RichText richText = RichText(
-      text: TextSpan(children: textSpans),
-    );
-
-    // Convert RichText to a plain String for the function call
-    String plainText = richText.text.toPlainText();
-
-    translateAndShowGeminiContent(plainText);
-
-  } catch (e) {
-    print("Error handling Gemini response: $e");
   }
-}
 
+  Future<void> saveChatsToFile() async {
+    try {
+      // Get the directory for storing files
+      String dir = (await getApplicationDocumentsDirectory()).path;
+      if (dir == null) {
+        // Handle the case where getting the directory fails
+        print("Error: Couldn't get directory for saving chats");
+        // Display an error message to the user here
+        return;
+      }
+      try {
+        // Get the directory for storing files
+        Directory dir = await getApplicationDocumentsDirectory();
+        String filePath = '${dir.path}/හෙළGPT_chat.txt';
 
+        // Open the file
+        File file = File(filePath);
+        IOSink sink = file.openWrite();
 
+        // Write each message to the file
+        for (ChatMessage message in allMessages) {
+          if (message.text.isNotEmpty) {
+            String messageText = '${message.user.firstName}: ${message.text}\n';
+            sink.write(messageText);
+          }
+        }
+
+        // Close the file
+        await sink.close();
+
+        // Show a snackbar or toast indicating the file is saved
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Chat history saved to $filePath')),
+        );
+
+        // Share the file
+        Share.shareFiles([filePath]);
+      } catch (e) {
+        print('Error saving chat history: $e');
+      } catch (e) {
+        print('Error saving chat history: $e');
+      }
+
+      // ... rest of the saveChatsToFile() code
+    } catch (e) {
+      print('Error saving chat history: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +179,19 @@ void handleGeminiResponse(String responseBody) {
       Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
+          actions: [
+            IconButton(
+                onPressed: () async {
+                  await saveChatsToFile();
+                  // if (dir!= null) {
+                  //   Share.shareFiles(['$dir/හෙළGPT_chat.txt']);
+
+                  // }else{
+                  //   print("Error: Directory not found");
+                  // }
+                },
+                icon: Icon(Icons.share)),
+          ],
           backgroundColor: Color.fromARGB(255, 48, 48, 48),
           title: const Text(
             'හෙළ GPT',
@@ -148,20 +211,60 @@ void handleGeminiResponse(String responseBody) {
           ),
         ),
         drawer: SideNav(),
-        
-        body: DashChat(
-          messageOptions: MessageOptions(showTime: true),
-          currentUser: you,
-          typingUsers: typing,
-          onSend: (ChatMessage m) {
-            // Handle message sending logic here
-            allMessages.insert(0, m); // Add the message to the chat instantly
-            setState(() {});
-            translateAndGenerateGeminiContent(m.text);
-          },
-          messages: allMessages,
+        body: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(
+                Theme.of(context).brightness == Brightness.light
+                    ? 'assets/images/back-light.png'
+                    : 'assets/images/back-dark.png',
+              ),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: DashChat(
+            messageOptions: MessageOptions(showTime: true),
+            currentUser: you,
+            typingUsers: typing,
+            onSend: (ChatMessage m) {
+              // Handle message sending logic here
+              allMessages.insert(0, m); // Add the message to the chat instantly
+              setState(() {});
+              checkInputs(m.text);
+            },
+            messages: allMessages,
+          ),
         ),
       ),
     ]);
+  }
+
+  List<String> guesses = [
+    "oya kwd",
+    "ඔයා",
+    "ඔයා කවුද?",
+    "ඔයා කවුද",
+    "ඔයා කවුද හැදුවෙ",
+    "oya kwd haduwe?",
+    "oya kwd haduwe",
+    "ඔයා කවුද ඇදුවෙ?"
+  ];
+
+  @override
+  void checkInputs(String inputs) {
+    if (guesses.contains(inputs)) {
+      typing.add(helaAi);
+
+      Future.delayed(Duration(seconds: 2), () {
+        translateAndShowGeminiContent(
+            "මම හෙළ GPT, LankaTech Innovations විසින් නිර්මාණය කරන ලද භාෂා ආකෘතියකි. ඔබට අවශ්‍ය විය හැකි ඕනෑම ප්‍රශ්නයක් හෝ තොරතුරු සමඟ ඔබට සහාය වීමට මම මෙහි සිටිමි. කොහොමද මම අද ඔබට උපකාර කළ හැක්කේ කෙසේද?");
+        typing.remove(helaAi);
+        setState(
+            () {}); // Make sure to call setState to trigger a rebuild if needed
+      });
+    } else {
+      translateAndGenerateGeminiContent(inputs);
+      typing.remove(helaAi);
+    }
   }
 }

@@ -28,17 +28,17 @@ ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     primaryColor: Color(0xFF82b366), // Sea green, soothing and balanced
     hintColor: Color(0xFFf9c74f), // Light yellow, for subtle accents
-    scaffoldBackgroundColor: Colors.grey[800], // Dark background
+    scaffoldBackgroundColor: const Color.fromARGB(255, 39, 39, 39), // Dark background
 
     // **Ensured text visibility:**
     textTheme: TextTheme(
-        bodyText1: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)), // White text for dark backgrounds
+        bodyText1: TextStyle(color: Color.fromARGB(255, 0, 0, 0)), // White text for dark backgrounds
         bodyText2: TextStyle(color: Colors.white70), // Slightly lighter text
     ),
 
     // **Maintained good contrast:**
     appBarTheme: AppBarTheme(
-        iconTheme: IconThemeData(color: const Color.fromARGB(255, 0, 0, 0)), // Light icons for contrast
+        iconTheme: IconThemeData(color: Color.fromARGB(255, 255, 255, 255)), // Light icons for contrast
     ),
    
 
