@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "189523470100",
+    "project_id": "helagpt",
+    "storage_bucket": "helagpt.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:189523470100:android:84ccab735a97330cc10401",
+        "android_client_info": {
+          "package_name": "com.hela_ai.hela_ai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "189523470100-v6k06tbi33168jk65pf7i2gtp0cccoqc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hela_ai.hela_ai",
+            "certificate_hash": "e901ae3e03b707f562406075805ce38b50bd9e1e"
+          }
+        },
+        {
+          "client_id": "189523470100-2oauphrc7fmes1uvq968f7jtjcd5p13g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA12OzM3dP7AMSxO0-a9_RuC81p8DLskZc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "189523470100-2oauphrc7fmes1uvq968f7jtjcd5p13g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

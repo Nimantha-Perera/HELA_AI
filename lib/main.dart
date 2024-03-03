@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hela_ai/screens/hela_ai.dart';
+import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/themprovider/theam.dart';
 import 'package:provider/provider.dart';
 import 'package:hela_ai/themprovider/theamdata.dart';
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
           darkTheme: darkTheme,
           themeMode: ThemeMode.system,
           debugShowCheckedModeBanner: false,
-          home: HelaAI(),
+          home: LoginScreen(),
         );
       },
     );
