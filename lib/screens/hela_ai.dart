@@ -94,9 +94,14 @@ void handleGeminiResponse(String responseBody) {
     List<TextSpan> textSpans = [];
     for (int i = 0; i < textSegments.length; i++) {
       if (i % 2 == 1) { // If it's an odd-indexed segment (bold part)
-        textSpans.add(TextSpan(text: textSegments[i], style: TextStyle(fontWeight: FontWeight.bold)));
+       textSpans.add(TextSpan(
+  text: textSegments[i],
+  style: TextStyle(fontWeight: FontWeight.bold ,color: Colors.white),
+));
+
       } else {
-        textSpans.add(TextSpan(text: textSegments[i]));
+        textSpans.add(TextSpan(text: textSegments[i],style:TextStyle(fontSize: 16,color: Colors.white)));
+        print("error bold");
       }
     }
 
