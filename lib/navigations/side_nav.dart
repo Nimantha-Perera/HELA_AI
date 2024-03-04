@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hela_ai/get_user_modal/user_modal.dart';
+import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/themprovider/theam.dart';
 import 'package:provider/provider.dart';
 // Import your ThemeProvider class
 
 class SideNav extends StatelessWidget {
-  const SideNav({Key? key});
+  final UserModal user;
+
+  
+  const SideNav({Key? key, required this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +28,7 @@ class SideNav extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'Welcome to හෙළ GPT',
+                  'Welcome to ${user.name}',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20.0,
@@ -31,10 +37,10 @@ class SideNav extends StatelessWidget {
                 ),
                 SizedBox(height: 8.0),
                 Text(
-                  'Explore the GPT World',
+                  'තාක්ශනික ලෝකය ගවේෂණය කරන්න',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 14.0,
+                    fontSize: 12.0,
                   ),
                 ),
               ],
@@ -65,6 +71,15 @@ class SideNav extends StatelessWidget {
               Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
           ),
+          ListTile(
+            leading: Icon(Icons.logout), // Icon for dark mode toggle
+            title: Text(
+             'Logout',
+            ),
+            onTap: () {
+              _handleLogOut(context);
+            },
+          ),
 
           ListTile(
             title: Center(
@@ -81,5 +96,25 @@ class SideNav extends StatelessWidget {
         ],
       ),
     );
+  }
+
+
+
+  void _handleLogOut(BuildContext context) async {
+    final GoogleSignIn _googleSignIn = GoogleSignIn();
+    
+    // Sign out from Google account
+    await _googleSignIn.signOut();
+
+    // Additional logout logic, if needed (e.g., clear user session)
+
+    // Navigate to the login screen or initial screen
+     // Navigate to the login screen
+     Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(),
+                ),
+              );
   }
 }

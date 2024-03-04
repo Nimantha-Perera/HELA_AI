@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -11,7 +13,11 @@ import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 
 class HelaAI extends StatefulWidget {
-  const HelaAI({Key? key}) : super(key: key);
+  final UserModal user;
+
+
+  const HelaAI({Key? key, required this.user}) : super(key: key);
+  
 
   @override
   State<HelaAI> createState() => _HelaAIState();
@@ -210,7 +216,7 @@ class _HelaAIState extends State<HelaAI> {
             },
           ),
         ),
-        drawer: SideNav(),
+        drawer: SideNav(user: widget.user,),
         body: Container(
           decoration: BoxDecoration(
             image: DecorationImage(
