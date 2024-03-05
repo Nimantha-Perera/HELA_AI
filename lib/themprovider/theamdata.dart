@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 ThemeData lightTheme = ThemeData(
     // **Modern, eye-pleasing base:**
     brightness: Brightness.light,
-    primaryColor: Color.fromARGB(255, 53, 53, 53), // Deep sky blue, vibrant and calming
+    primaryColor: Color.fromARGB(255, 66, 235, 0), // Deep sky blue, vibrant and calming
     hintColor: Color(0xFFf39c12), // Orange, for subtle accents
     scaffoldBackgroundColor: Colors.white, // Light background
 

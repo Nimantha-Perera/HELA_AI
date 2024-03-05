@@ -2,18 +2,26 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
+import 'package:hela_ai/themprovider/theamdata.dart';
+import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:intl/intl.dart';
+
+bool isTyping = false;
+
+ChatUser you = ChatUser(
+    id: "1", firstName: "You", profileImage: 'assets/images/lion_avetar.png');
+ChatUser helaAi =
+    ChatUser(profileImage: 'assets/images/lion_avetar.png', id: '2');
 
 class HelaAI extends StatefulWidget {
   final UserModal user;
@@ -24,14 +32,11 @@ class HelaAI extends StatefulWidget {
   State<HelaAI> createState() => _HelaAIState();
 }
 
-void initState() {}
-
 class _HelaAIState extends State<HelaAI> {
   List<TargetFocus> targets = [];
-  
 
-  ChatUser you = ChatUser(id: "1", firstName: "You");
-  ChatUser helaAi = ChatUser(id: "2", firstName: "හෙළ GPT");
+  TextEditingController messageController = TextEditingController();
+
   List<ChatMessage> allMessages = [];
   List<ChatUser> typing = [];
 
@@ -44,7 +49,7 @@ class _HelaAIState extends State<HelaAI> {
     });
   }
 
-// Tutorial
+  // Tutorial
 
   void showTutorial() {
     _initTargets();
@@ -52,63 +57,48 @@ class _HelaAIState extends State<HelaAI> {
       targets: targets,
     )..show(context: context);
   }
-// Globle Keys
 
-GlobalKey sharekey = GlobalKey();
-GlobalKey menukey = GlobalKey();
-GlobalKey navkey = GlobalKey();
+  // Globle Keys
 
-void _initTargets() {
-  targets = [
-   
-    TargetFocus(
-      identify: "menu-key",
-      keyTarget: menukey,
-      contents: [
+  GlobalKey sharekey = GlobalKey();
+  GlobalKey menukey = GlobalKey();
+  GlobalKey navkey = GlobalKey();
+
+  void _initTargets() {
+    targets = [
+      TargetFocus(identify: "menu-key", keyTarget: menukey, contents: [
         TargetContent(
-          align: ContentAlign.bottom,
-          builder: (context, controller) {
-            return CoachMarkDes(
-              text: "Navigate through the menu",
-              onSkip: () {
-                controller.skip();
-              },
-              onNext: () {
-                controller.next();
-              },
-                
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return CoachMarkDes(
+                text: "Navigate through the menu",
+                onSkip: () {
+                  controller.skip();
+                },
+                onNext: () {
+                  controller.next();
+                },
               );
-
-          }
-        )
-      ]
-    ),
-    TargetFocus(
-      identify: "share-key",
-      keyTarget: sharekey,
-      contents: [
+            })
+      ]),
+      TargetFocus(identify: "share-key", keyTarget: sharekey, contents: [
         TargetContent(
-          align: ContentAlign.bottom,
-          builder: (context, controller) {
-            return CoachMarkDes(
-              text: "Share Your Chat with others",
-              onSkip: () {
-                controller.skip();
-              },
-              onNext: () {
-                controller.next();
-              },
-
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return CoachMarkDes(
+                text: "Share Your Chat with others",
+                onSkip: () {
+                  controller.skip();
+                },
+                onNext: () {
+                  controller.next();
+                },
               );
-
-          }
-        )
-      ]
-    ),
-    // Add more TargetFocus objects if needed
-  ];
-}
-
+            })
+      ]),
+      // Add more TargetFocus objects if needed
+    ];
+  }
 
   void translateAndGenerateGeminiContent(String inputText) {
     translator.translate(inputText, to: 'en').then((value) {
@@ -121,7 +111,7 @@ void _initTargets() {
   }
 
   Future<void> generateGeminiContent(String translatedText) async {
-    typing.add(helaAi);
+    isTyping = true;
     final ourUrl =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyC6I358RmUE_IErdz9VnwKZjbJQIukHgsI";
     final header = {'Content-Type': 'application/json'};
@@ -148,6 +138,7 @@ void _initTargets() {
       print("Error Occurred: $e");
     }
     typing.remove(helaAi);
+    isTyping = false;
   }
 
   void translateAndShowGeminiContent(String outputText) {
@@ -260,73 +251,126 @@ void _initTargets() {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: <Widget>[
-      Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
-          actions: [
-            IconButton(
-                key: sharekey,
-                onPressed: () async {
-                  await saveChatsToFile();
-                  // if (dir!= null) {
-                  //   Share.shareFiles(['$dir/හෙළGPT_chat.txt']);
-
-                  // }else{
-                  //   print("Error: Directory not found");
-                  // }
-                },
-                icon: Icon(Icons.share)),
-          ],
-          backgroundColor: Color.fromARGB(255, 48, 48, 48),
-          title: const Text(
-            'හෙළ GPT',
-            style: TextStyle(
-                fontSize: 15, color: Color.fromARGB(255, 255, 255, 255)),
-          ),
-          // actions: [IconButton(onPressed: () {}, icon: Icon(Icons.search))],
-
-          centerTitle: true,
-          leading: Builder(
-            builder: (BuildContext context) {
-              return IconButton(
-                key: menukey,
-                icon: Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              );
-            },
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+              key: sharekey,
+              onPressed: () async {
+                await saveChatsToFile();
+              },
+              icon: Icon(Icons.share)),
+        ],
+        backgroundColor: Color.fromARGB(255, 48, 48, 48),
+        title: const Text(
+          'හෙළ GPT',
+          style: TextStyle(
+              fontSize: 15, color: Color.fromARGB(255, 255, 255, 255)),
         ),
-        drawer: SideNav(
-          user: widget.user,
-        ),
-        body: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(
-                Theme.of(context).brightness == Brightness.light
-                    ? 'assets/images/back-light.png'
-                    : 'assets/images/back-dark.png',
-              ),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: DashChat(
-         
-            messageOptions: MessageOptions(showTime: true),
-            currentUser: you,
-            typingUsers: typing,
-            onSend: (ChatMessage m) {
-              // Handle message sending logic here
-              allMessages.insert(0, m); // Add the message to the chat instantly
-              setState(() {});
-              checkInputs(m.text);
-            },
-            messages: allMessages,
-          ),
+        centerTitle: true,
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              key: menukey,
+              icon: Icon(Icons.menu, color: Colors.white),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            );
+          },
         ),
       ),
-    ]);
+      drawer: SideNav(
+        user: widget.user,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              Theme.of(context).brightness == Brightness.light
+                  ? 'assets/images/back-light.png'
+                  : 'assets/images/back-dark.png',
+            ),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                reverse: true,
+                itemCount: allMessages.length,
+                itemBuilder: (context, index) {
+                  final message = allMessages[index];
+                  return ChatBubble(message: message);
+                },
+              ),
+            ),
+            isTyping ? TypingIndicator() : SizedBox(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                            8.0), // Adjust the border radius as needed
+                        border:
+                            Border.all(color: Colors.grey), // Set border color
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: TextField(
+                          controller: messageController,
+                          decoration: InputDecoration(
+                            hintText: 'Type your message...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            border: InputBorder.none,
+                          ),
+                          onChanged: (text) {
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: 48, // Set the desired height for the button
+                    child: Visibility(
+                      visible: messageController.text.isNotEmpty,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final messageText = messageController.text.trim();
+                          if (messageText.isNotEmpty) {
+                            final message = ChatMessage(
+                              user: you,
+                              createdAt: DateTime.now(),
+                              text: messageText,
+                            );
+                            allMessages.insert(0, message);
+
+                            setState(() {});
+                            checkInputs(messageText);
+                            messageController.clear();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: CircleBorder(), // Make the button circular
+                          elevation:
+                              0.0, // Set elevation to 0.0 to remove the background shadow
+                          shadowColor: Colors
+                              .transparent, // Set shadowColor to transparent
+                        ),
+                        child: Icon(Icons.send),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<String> guesses = [
@@ -356,5 +400,80 @@ void _initTargets() {
       translateAndGenerateGeminiContent(inputs);
       typing.remove(helaAi);
     }
+  }
+}
+
+class ChatBubble extends StatelessWidget {
+  final ChatMessage message;
+
+  const ChatBubble({Key? key, required this.message}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isCurrentUser = message.user == you;
+    final ThemeData theme = isCurrentUser ? lightTheme : darkTheme;
+
+    return ListTile(
+      leading: isCurrentUser
+          ? null // No avatar for current user on the left
+          : CircleAvatar(
+              // Add AI avatar on the left
+              backgroundImage: AssetImage('assets/images/lion_avetar.png')
+              ,
+              backgroundColor: Colors.transparent,
+            ),
+      trailing: isCurrentUser
+          ? CircleAvatar(
+              // Add user avatar on the right
+              backgroundImage: AssetImage('assets/images/user_avetar.png'),
+            )
+          : null, // No avatar for AI on the right
+      title: Column(
+        crossAxisAlignment:
+            isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: isCurrentUser
+                  ? theme.primaryColor
+                  : theme.scaffoldBackgroundColor,
+            ),
+            child: Text(
+              message.text,
+              style: TextStyle(
+                color: isCurrentUser
+                    ? Colors.white
+                    : const Color.fromARGB(255, 255, 255, 255),
+              ),
+            ),
+          ),
+          SizedBox(height: 4), // Add spacing between message and timestamp
+          Text(
+            DateFormat.Hm().format(message.createdAt), // Format time as HH:mm
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TypingIndicator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Lottie.network(
+            "https://lottie.host/7b1625cc-828e-44b7-b507-920b4581e345/okYRr6A8oe.json",
+            width: 35, // Set your desired width
+            height: 35, // Set your desired height
+          )
+        ],
+      ),
+    );
   }
 }

@@ -42,7 +42,7 @@ class SideNav extends StatelessWidget {
                 ),
                 SizedBox(height: 8.0),
                 Text(
-                  'තාක්ශනික ලෝකය ගවේෂණය කරන්න',
+                  'හෙළ GPT අපේ දෙයක්',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 12.0,
