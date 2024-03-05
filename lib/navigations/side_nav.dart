@@ -21,6 +21,10 @@ class SideNav extends StatelessWidget {
           DrawerHeader(
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 109, 109, 109),
+              image: DecorationImage(
+                image: AssetImage('assets/images/back-dark.png'),
+                fit: BoxFit.cover,
+              ),
               borderRadius: BorderRadius.zero, // Remove default border radius
             ),
             child: Column(
@@ -28,7 +32,7 @@ class SideNav extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'Welcome to ${user.name}',
+                  'Welcome ${user.name}',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20.0,

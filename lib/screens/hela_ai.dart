@@ -5,31 +5,110 @@ import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class HelaAI extends StatefulWidget {
   final UserModal user;
 
-
   const HelaAI({Key? key, required this.user}) : super(key: key);
-  
 
   @override
   State<HelaAI> createState() => _HelaAIState();
 }
 
+void initState() {}
+
 class _HelaAIState extends State<HelaAI> {
+  List<TargetFocus> targets = [];
+  
+
   ChatUser you = ChatUser(id: "1", firstName: "You");
   ChatUser helaAi = ChatUser(id: "2", firstName: "හෙළ GPT");
   List<ChatMessage> allMessages = [];
   List<ChatUser> typing = [];
 
   GoogleTranslator translator = GoogleTranslator();
+
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(seconds: 1), () {
+      showTutorial();
+    });
+  }
+
+// Tutorial
+
+  void showTutorial() {
+    _initTargets();
+    TutorialCoachMark tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+    )..show(context: context);
+  }
+// Globle Keys
+
+GlobalKey sharekey = GlobalKey();
+GlobalKey menukey = GlobalKey();
+GlobalKey navkey = GlobalKey();
+
+void _initTargets() {
+  targets = [
+   
+    TargetFocus(
+      identify: "menu-key",
+      keyTarget: menukey,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return CoachMarkDes(
+              text: "Navigate through the menu",
+              onSkip: () {
+                controller.skip();
+              },
+              onNext: () {
+                controller.next();
+              },
+                
+              );
+
+          }
+        )
+      ]
+    ),
+    TargetFocus(
+      identify: "share-key",
+      keyTarget: sharekey,
+      contents: [
+        TargetContent(
+          align: ContentAlign.bottom,
+          builder: (context, controller) {
+            return CoachMarkDes(
+              text: "Share Your Chat with others",
+              onSkip: () {
+                controller.skip();
+              },
+              onNext: () {
+                controller.next();
+              },
+
+              );
+
+          }
+        )
+      ]
+    ),
+    // Add more TargetFocus objects if needed
+  ];
+}
+
 
   void translateAndGenerateGeminiContent(String inputText) {
     translator.translate(inputText, to: 'en').then((value) {
@@ -187,6 +266,7 @@ class _HelaAIState extends State<HelaAI> {
         appBar: AppBar(
           actions: [
             IconButton(
+                key: sharekey,
                 onPressed: () async {
                   await saveChatsToFile();
                   // if (dir!= null) {
@@ -210,13 +290,16 @@ class _HelaAIState extends State<HelaAI> {
           leading: Builder(
             builder: (BuildContext context) {
               return IconButton(
+                key: menukey,
                 icon: Icon(Icons.menu, color: Colors.white),
                 onPressed: () => Scaffold.of(context).openDrawer(),
               );
             },
           ),
         ),
-        drawer: SideNav(user: widget.user,),
+        drawer: SideNav(
+          user: widget.user,
+        ),
         body: Container(
           decoration: BoxDecoration(
             image: DecorationImage(
@@ -229,6 +312,7 @@ class _HelaAIState extends State<HelaAI> {
             ),
           ),
           child: DashChat(
+         
             messageOptions: MessageOptions(showTime: true),
             currentUser: you,
             typingUsers: typing,
