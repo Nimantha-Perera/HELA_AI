@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/screens/hela_ai.dart';
-import 'package:provider/provider.dart';
  // Import your home screen
 
 class LoginScreen extends StatefulWidget {
@@ -36,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () async {
                 UserModal? user = await _handleSignIn();
                 if (user != null) {
-                  context.read<UserProvider>().setUser(user);
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
@@ -89,14 +87,4 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 }
-}
-class UserProvider extends ChangeNotifier {
-  UserModal? _user;
-
-  UserModal? get user => _user;
-
-  void setUser(UserModal user) {
-    _user = user;
-    notifyListeners();
-  }
 }
