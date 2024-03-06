@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HelaAI(user: user),
+                      builder: (context) => HelaAI(user: user, img_url: user.img_url),
                     ),
                   );
                 }
@@ -77,8 +77,13 @@ class _LoginScreenState extends State<LoginScreen> {
       String name = user.displayName ?? "";
       String email = user.email ?? "";
       String uid = user.uid;
+      String img_url = user.photoURL??"";
 
-      return UserModal(name: name, email: email, uid: uid);
+      
+
+      print("User Img Url:$img_url");
+
+      return UserModal(name: name, email: email,img_url: img_url, uid: uid);
     } else {
       return null;
     }

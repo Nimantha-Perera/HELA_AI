@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
@@ -23,6 +24,7 @@ import 'package:flutter/services.dart'; // Add this line for the platform channe
 
 bool isTyping = false;
 
+
 ChatUser you = ChatUser(
     id: "1", firstName: "You", profileImage: 'assets/images/lion_avetar.png');
 ChatUser helaAi =
@@ -31,7 +33,8 @@ ChatUser helaAi =
 class HelaAI extends StatefulWidget {
   final UserModal user;
 
-  const HelaAI({Key? key, required this.user}) : super(key: key);
+
+  const HelaAI({Key? key, required this.user, required String img_url}) : super(key: key);
 
   @override
   State<HelaAI> createState() => _HelaAIState();
@@ -45,6 +48,7 @@ class _HelaAIState extends State<HelaAI> {
   bool _speechEnabled = false;
   String _wordSpoken = ' ';
   double _confidenceLevel = 0;
+  
 
   TextEditingController messageController = TextEditingController();
 
@@ -58,7 +62,6 @@ class _HelaAIState extends State<HelaAI> {
     Future.delayed(Duration(seconds: 1), () {
       showTutorial();
       initSpeech();
-      
     });
   }
 
@@ -251,8 +254,7 @@ class _HelaAIState extends State<HelaAI> {
         );
 
         allMessages.insert(0, m1);
-        
-        speakSinhala(translatedText);
+
         setState(() {});
       });
     });
@@ -398,7 +400,7 @@ class _HelaAIState extends State<HelaAI> {
                 itemCount: allMessages.length,
                 itemBuilder: (context, index) {
                   final message = allMessages[index];
-                  return ChatBubble(message: message);
+                  return ChatBubble(message: message, img_url: widget.user.img_url,);
                 },
               ),
             ),
@@ -515,31 +517,54 @@ class _HelaAIState extends State<HelaAI> {
     }
   }
 }
-  final FlutterTts flutterTts = FlutterTts();
-class ChatBubble extends StatelessWidget {
-  final ChatMessage message;
 
-  const ChatBubble({Key? key, required this.message}) : super(key: key);
+final FlutterTts flutterTts = FlutterTts();
+
+class ChatBubble extends StatefulWidget {
+  
+  final ChatMessage message;
+   final String img_url;
+
+  const ChatBubble({Key? key, required this.message,required this.img_url}) : super(key: key);
+  
+
+  @override
+  _ChatBubbleState createState() => _ChatBubbleState();
+}
+
+
+class _ChatBubbleState extends State<ChatBubble> {
+  
+  bool isSpeaking = false;
+  Future<void> speakSinhala(String text) async {
+    await flutterTts.setLanguage("si-LK");
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.speak(text);
+    bool isSpeaking = false;
+    setState(() {
+      isSpeaking = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isCurrentUser = message.user == you;
+    final isCurrentUser = widget.message.user == you;
     final ThemeData theme = isCurrentUser ? lightTheme : darkTheme;
+
 
     return ListTile(
       leading: isCurrentUser
-          ? null // No avatar for current user on the left
+          ? null
           : CircleAvatar(
-              // Add AI avatar on the left
               backgroundImage: AssetImage('assets/images/lion_avetar.png'),
               backgroundColor: Colors.transparent,
             ),
       trailing: isCurrentUser
           ? CircleAvatar(
-              // Add user avatar on the right
-              backgroundImage: AssetImage('assets/images/user_avetar.png'),
+              backgroundImage: NetworkImage(widget.img_url),
             )
-          : null, // No avatar for AI on the right
+          : null,
       title: Column(
         crossAxisAlignment:
             isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -553,7 +578,7 @@ class ChatBubble extends StatelessWidget {
                   : theme.scaffoldBackgroundColor,
             ),
             child: Text(
-              message.text,
+              widget.message.text,
               style: TextStyle(
                 color: isCurrentUser
                     ? Colors.white
@@ -561,21 +586,30 @@ class ChatBubble extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 4), // Add spacing between message and timestamp
+          SizedBox(height: 4),
           Row(
             children: [
-              if (!isCurrentUser) // Show the button only for AI messages
+              if (!isCurrentUser)
                 IconButton(
                   onPressed: () {
-                    // Handle button press for AI messages
-                    speakSinhala(message.text);
+                    if (isSpeaking) {
+                      stopSpeaking();
+                    } else {
+                      speakSinhala(widget.message.text);
+                    }
+                    setState(() {
+                      isSpeaking = !isSpeaking;
+                    });
                   },
-                  icon: Icon(Icons.volume_up),
+                  icon: Icon(isSpeaking ? Icons.stop : Icons.volume_up),
                 ),
-              SizedBox(width: 4), // Add spacing between avatar and timestamp
-              Text(
-                DateFormat.Hm().format(message.createdAt),
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  DateFormat.Hm().format(widget.message.createdAt),
+                  textAlign: isCurrentUser? TextAlign.end:TextAlign.start,
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ),
             ],
           ),
@@ -583,10 +617,6 @@ class ChatBubble extends StatelessWidget {
       ),
     );
   }
-
-
-
-
 }
 
 class TypingIndicator extends StatelessWidget {
@@ -606,10 +636,11 @@ class TypingIndicator extends StatelessWidget {
     );
   }
 }
-  // Asynchronous function to speak the provided text in Sinhala language using FlutterTTS.
-  Future<void> speakSinhala(String text) async {
-    await flutterTts.setLanguage("si-LK"); // Sinhala language code
-    await flutterTts.setPitch(1.0);
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.speak(text);
-  }
+
+
+
+// Asynchronous function to speak the provided text in Sinhala language using FlutterTTS.
+
+Future<void> stopSpeaking() async {
+  await flutterTts.stop();
+}
