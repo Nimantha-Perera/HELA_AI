@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
@@ -11,10 +13,13 @@ import 'package:hela_ai/themprovider/theamdata.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translator/translator.dart';
 import 'package:http/http.dart' as http;
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart'; // Add this line for the platform channel
 
 bool isTyping = false;
 
@@ -35,6 +40,12 @@ class HelaAI extends StatefulWidget {
 class _HelaAIState extends State<HelaAI> {
   List<TargetFocus> targets = [];
 
+  final SpeechToText _speechToText = SpeechToText();
+
+  bool _speechEnabled = false;
+  String _wordSpoken = ' ';
+  double _confidenceLevel = 0;
+
   TextEditingController messageController = TextEditingController();
 
   List<ChatMessage> allMessages = [];
@@ -46,11 +57,59 @@ class _HelaAIState extends State<HelaAI> {
     super.initState();
     Future.delayed(Duration(seconds: 1), () {
       showTutorial();
+      initSpeech();
+      
     });
   }
 
-  // Tutorial
+  // Initialize speech functionality asynchronously.
+  void initSpeech() async {
+    _speechEnabled = await _speechToText.initialize();
+    setState(() {});
+  }
 
+  void _startListening() async {
+    await _speechToText.listen(
+      onResult: _onSpeechResult,
+      localeId: 'si_LK', // Set Sinhala locale
+    );
+
+    setState(() {
+      _confidenceLevel = 0;
+    });
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _wordSpoken = result.recognizedWords;
+      _confidenceLevel = result.confidence;
+    });
+
+    if (result.finalResult) {
+      // If it's the final result, send the recognized text to the chat
+      sendMessage(_wordSpoken);
+    }
+  }
+
+  void sendMessage(String text) {
+    final message = ChatMessage(
+      user: you,
+      createdAt: DateTime.now(),
+      text: text,
+    );
+    allMessages.insert(0, message);
+    setState(() {});
+    checkInputs(text);
+    messageController.clear();
+  }
+
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {});
+  }
+
+  // Tutorial
+  // Function to display a tutorial using TutorialCoachMark
   void showTutorial() {
     _initTargets();
     TutorialCoachMark tutorialCoachMark = TutorialCoachMark(
@@ -63,15 +122,52 @@ class _HelaAIState extends State<HelaAI> {
   GlobalKey sharekey = GlobalKey();
   GlobalKey menukey = GlobalKey();
   GlobalKey navkey = GlobalKey();
+  GlobalKey chatkey = GlobalKey();
+  GlobalKey voice = GlobalKey();
 
+  // Initialize the targets for the CoachMark library, including menu and share targets.
   void _initTargets() {
     targets = [
+      TargetFocus(
+          shape: ShapeLightFocus.RRect,
+          identify: "chat-key",
+          keyTarget: chatkey,
+          contents: [
+            TargetContent(
+                align: ContentAlign.top,
+                builder: (context, controller) {
+                  return CoachMarkDes(
+                    text: "මෙතනින් chat කරල ප්‍රශ්න අහන්න",
+                    onSkip: () {
+                      controller.skip();
+                    },
+                    onNext: () {
+                      controller.next();
+                    },
+                  );
+                })
+          ]),
+      TargetFocus(identify: "voice-key", keyTarget: voice, contents: [
+        TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return CoachMarkDes(
+                text: "හෝ මයික් එක භාවිතයෙන් හෙළ GPT සමග කතාකරල ප්‍රශ්න අහන්න",
+                onSkip: () {
+                  controller.skip();
+                },
+                onNext: () {
+                  controller.next();
+                },
+              );
+            })
+      ]),
       TargetFocus(identify: "menu-key", keyTarget: menukey, contents: [
         TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controller) {
               return CoachMarkDes(
-                text: "Navigate through the menu",
+                text: "Menu එක මෙතනින් භාවිතා කරන්න පුලුවන්",
                 onSkip: () {
                   controller.skip();
                 },
@@ -86,7 +182,7 @@ class _HelaAIState extends State<HelaAI> {
             align: ContentAlign.bottom,
             builder: (context, controller) {
               return CoachMarkDes(
-                text: "Share Your Chat with others",
+                text: "ඔබ ඇසූ ප්‍රශ්න සහ පිලිතුරු යහලුවන් සමභ බෙදාගන්න මෙතනින්",
                 onSkip: () {
                   controller.skip();
                 },
@@ -155,7 +251,8 @@ class _HelaAIState extends State<HelaAI> {
         );
 
         allMessages.insert(0, m1);
-
+        
+        speakSinhala(translatedText);
         setState(() {});
       });
     });
@@ -255,11 +352,12 @@ class _HelaAIState extends State<HelaAI> {
       appBar: AppBar(
         actions: [
           IconButton(
-              key: sharekey,
-              onPressed: () async {
-                await saveChatsToFile();
-              },
-              icon: Icon(Icons.share)),
+            key: sharekey,
+            onPressed: () async {
+              await saveChatsToFile();
+            },
+            icon: Icon(Icons.share),
+          ),
         ],
         backgroundColor: Color.fromARGB(255, 48, 48, 48),
         title: const Text(
@@ -312,29 +410,46 @@ class _HelaAIState extends State<HelaAI> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                            8.0), // Adjust the border radius as needed
-                        border:
-                            Border.all(color: Colors.grey), // Set border color
+                        borderRadius: BorderRadius.circular(8.0),
+                        border: Border.all(color: Colors.grey),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: TextField(
-                          controller: messageController,
-                          decoration: InputDecoration(
-                            hintText: 'Type your message...',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            border: InputBorder.none,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: TextField(
+                                key: chatkey,
+                                controller: messageController,
+                                decoration: InputDecoration(
+                                  hintText: 'Type your message...',
+                                  hintStyle: TextStyle(color: Colors.grey),
+                                  border: InputBorder.none,
+                                ),
+                                onChanged: (text) {
+                                  setState(() {});
+                                },
+                              ),
+                            ),
                           ),
-                          onChanged: (text) {
-                            setState(() {});
-                          },
-                        ),
+                          IconButton(
+                            key: voice,
+                            onPressed: () {
+                              _speechToText.isNotListening
+                                  ? _startListening()
+                                  : _stopListening();
+                            },
+                            icon: Icon(_speechToText.isNotListening
+                                ? Icons.mic
+                                : Icons.stop),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                   Container(
-                    height: 48, // Set the desired height for the button
+                    height: 48,
                     child: Visibility(
                       visible: messageController.text.isNotEmpty,
                       child: ElevatedButton(
@@ -354,11 +469,9 @@ class _HelaAIState extends State<HelaAI> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          shape: CircleBorder(), // Make the button circular
-                          elevation:
-                              0.0, // Set elevation to 0.0 to remove the background shadow
-                          shadowColor: Colors
-                              .transparent, // Set shadowColor to transparent
+                          shape: CircleBorder(),
+                          elevation: 0.0,
+                          shadowColor: Colors.transparent,
                         ),
                         child: Icon(Icons.send),
                       ),
@@ -391,7 +504,7 @@ class _HelaAIState extends State<HelaAI> {
 
       Future.delayed(Duration(seconds: 2), () {
         translateAndShowGeminiContent(
-            "මම හෙළ GPT, LankaTech Innovations විසින් නිර්මාණය කරන ලද භාෂා ආකෘතියකි. ඔබට අවශ්‍ය විය හැකි ඕනෑම ප්‍රශ්නයක් හෝ තොරතුරු සමඟ ඔබට සහාය වීමට මම මෙහි සිටිමි. කොහොමද මම අද ඔබට උපකාර කළ හැක්කේ කෙසේද?");
+            "මම හෙළ GPT, LankaTech Innovations හී නිර්මාතෘ වන P.W.R නිමන්‍ත පෙරේරා විසින් නිර්මාණය කරන ලද භාෂා ආකෘතියකි. ඔබට අවශ්‍ය විය හැකි ඕනෑම ප්‍රශ්නයක් හෝ තොරතුරු සමඟ ඔබට සහාය වීමට මම මෙහි සිටිමි. කොහොමද මම අද ඔබට උපකාර කළ හැක්කේ කෙසේද?");
         typing.remove(helaAi);
         setState(
             () {}); // Make sure to call setState to trigger a rebuild if needed
@@ -402,7 +515,7 @@ class _HelaAIState extends State<HelaAI> {
     }
   }
 }
-
+  final FlutterTts flutterTts = FlutterTts();
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
 
@@ -418,8 +531,7 @@ class ChatBubble extends StatelessWidget {
           ? null // No avatar for current user on the left
           : CircleAvatar(
               // Add AI avatar on the left
-              backgroundImage: AssetImage('assets/images/lion_avetar.png')
-              ,
+              backgroundImage: AssetImage('assets/images/lion_avetar.png'),
               backgroundColor: Colors.transparent,
             ),
       trailing: isCurrentUser
@@ -450,14 +562,31 @@ class ChatBubble extends StatelessWidget {
             ),
           ),
           SizedBox(height: 4), // Add spacing between message and timestamp
-          Text(
-            DateFormat.Hm().format(message.createdAt), // Format time as HH:mm
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+          Row(
+            children: [
+              if (!isCurrentUser) // Show the button only for AI messages
+                IconButton(
+                  onPressed: () {
+                    // Handle button press for AI messages
+                    speakSinhala(message.text);
+                  },
+                  icon: Icon(Icons.volume_up),
+                ),
+              SizedBox(width: 4), // Add spacing between avatar and timestamp
+              Text(
+                DateFormat.Hm().format(message.createdAt),
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+
+
+
+
 }
 
 class TypingIndicator extends StatelessWidget {
@@ -477,3 +606,10 @@ class TypingIndicator extends StatelessWidget {
     );
   }
 }
+  // Asynchronous function to speak the provided text in Sinhala language using FlutterTTS.
+  Future<void> speakSinhala(String text) async {
+    await flutterTts.setLanguage("si-LK"); // Sinhala language code
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.speak(text);
+  }
