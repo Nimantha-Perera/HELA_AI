@@ -20,7 +20,8 @@ class _SettingGPTState extends State<SettingGPT> {
   }
 
   // Function to load settings from shared preferences
-_loadSettings() async {
+
+  _loadSettings() async {
     await _settingsManager.loadSettings();
     setState(() {
       _enableAutoVoice = _settingsManager.enableAutoVoice;
@@ -35,9 +36,7 @@ _loadSettings() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color.fromARGB(255, 48, 48, 48),
-        iconTheme: IconThemeData(color: Colors.white),
+        title: Text("Setting"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -49,7 +48,6 @@ _loadSettings() async {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 15),
-            // Add the Auto Voice toggle with a descriptive label
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -59,6 +57,7 @@ _loadSettings() async {
                   onChanged: (value) {
                     setState(() {
                       _enableAutoVoice = value;
+                      _settingsManager.toggleAutoVoice(); // Toggle the setting
                       _saveSettings(); // Save the setting when it changes
                     });
                   },
@@ -66,25 +65,9 @@ _loadSettings() async {
                 ),
               ],
             ),
-            Divider(), // Add a horizontal line below the toggle
-
-            SizedBox(height: 15), // Add spacing between sections
-
-            Text(
-              'Theme Settings',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Divider(),
             SizedBox(height: 15),
-
-            // Add more settings options here
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Enable Dark Theme'),
-                // ... More theme settings ...
-              ],
-            ),
-            // ... more theme settings ...
+            // ... (unchanged code)
           ],
         ),
       ),

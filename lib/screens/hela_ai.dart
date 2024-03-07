@@ -10,6 +10,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
+import 'package:hela_ai/setting_maneger/settign_maneger.dart';
 import 'package:hela_ai/themprovider/theamdata.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,6 +24,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart'; // Add this line for the platform channel
 
 bool isTyping = false;
+bool isSpeaking = false;
 
 ChatUser you = ChatUser(
     id: "1", firstName: "You", profileImage: 'assets/images/lion_avetar.png');
@@ -207,14 +209,6 @@ class _HelaAIState extends State<HelaAI> {
     });
   }
 
-  Future<void> speakResponse(String responseText) async {
-    await flutterTts.setLanguage("si-LK");
-    await flutterTts.setPitch(1.0);
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.speak(responseText);
-  }
-
-
   Future<void> generateGeminiContent(String translatedText) async {
     isTyping = true;
     final ourUrl =
@@ -249,11 +243,28 @@ class _HelaAIState extends State<HelaAI> {
           "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
     }
     typing.remove(helaAi);
-    translateAndShowGeminiContent(
-        "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
+
     isTyping = false;
-    speakResponse(translatedText);
   }
+
+  SettingsManager _settingsManager = SettingsManager();
+
+// Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
+//   // ... (existing code)
+
+//   // Perform asynchronous operations outside of setState
+//   await flutterTts.setLanguage("si-LK");
+//   await flutterTts.setPitch(1.0);
+//   await flutterTts.setSpeechRate(0.5);
+
+//   // Check auto voice status and trigger speaking if enabled
+//   if (settingsManager.enableAutoVoice) {
+//     await flutterTts.speak(text);
+//     print("Manager: $settingsManager");
+//   } else {
+//     print("Auto Voice Disabled");
+//   }
+// }
 
   void translateAndShowGeminiContent(String outputText) {
     translator.translate(outputText, to: 'si').then((value) {
@@ -269,8 +280,10 @@ class _HelaAIState extends State<HelaAI> {
         );
 
         allMessages.insert(0, m1);
-       
-        setState(() {});
+        // speakSinhala(translatedText, _settingsManager);
+        setState(() {
+          
+        });
       });
     });
   }
@@ -395,7 +408,6 @@ class _HelaAIState extends State<HelaAI> {
       ),
       drawer: SideNav(
         user: widget.user,
-        
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -550,16 +562,13 @@ class ChatBubble extends StatefulWidget {
   _ChatBubbleState createState() => _ChatBubbleState();
 }
 
-
-
 class _ChatBubbleState extends State<ChatBubble> {
-  bool isSpeaking = false;
   Future<void> speakSinhala(String text) async {
     await flutterTts.setLanguage("si-LK");
     await flutterTts.setPitch(1.0);
     await flutterTts.setSpeechRate(0.5);
     await flutterTts.speak(text);
-    bool isSpeaking = false;
+
     setState(() {
       isSpeaking = true;
     });

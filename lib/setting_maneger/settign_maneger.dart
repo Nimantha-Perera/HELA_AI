@@ -6,15 +6,18 @@ class SettingsManager {
   bool get enableAutoVoice => _enableAutoVoice;
 
   // Function to toggle the value of enableAutoVoice
-  void toggleAutoVoice() {
+ void toggleAutoVoice() {
     _enableAutoVoice = !_enableAutoVoice;
+    print('Toggled Auto Voice setting: $_enableAutoVoice');
   }
 
   // Function to load settings from shared preferences
-  Future<void> loadSettings() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _enableAutoVoice = prefs.getBool('enableAutoVoice') ?? false;
-  }
+ Future<void> loadSettings() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  _enableAutoVoice = prefs.getBool('enableAutoVoice') ?? false;
+  print('Loaded Auto Voice setting: $_enableAutoVoice');
+}
+
 
   // Function to save settings to shared preferences
   void saveSettings() async {

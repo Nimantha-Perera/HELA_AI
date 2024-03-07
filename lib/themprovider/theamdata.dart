@@ -32,7 +32,7 @@ ThemeData darkTheme = ThemeData(
 
     // **Ensured text visibility:**
     textTheme: TextTheme(
-        bodyText1: TextStyle(color: Color.fromARGB(255, 0, 0, 0)), // White text for dark backgrounds
+        bodyText1: TextStyle(color: Color.fromARGB(255, 255, 255, 255)), // White text for dark backgrounds
         bodyText2: TextStyle(color: Colors.white70), // Slightly lighter text
     ),
 
