@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/screens/privacy_policy.dart';
+import 'package:hela_ai/screens/setting.dart';
 import 'package:hela_ai/themprovider/theam.dart';
 import 'package:provider/provider.dart';
 // Import your ThemeProvider class
@@ -83,6 +84,19 @@ class SideNav extends StatelessWidget {
             ),
             onTap: () {
               _handleLogOut(context);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.settings), // Icon for dark mode toggle
+            title: Text(
+             'Setting',
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SettingGPT(),
+                )
+              );
             },
           ),
 

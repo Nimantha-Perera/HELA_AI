@@ -24,7 +24,6 @@ import 'package:flutter/services.dart'; // Add this line for the platform channe
 
 bool isTyping = false;
 
-
 ChatUser you = ChatUser(
     id: "1", firstName: "You", profileImage: 'assets/images/lion_avetar.png');
 ChatUser helaAi =
@@ -33,8 +32,8 @@ ChatUser helaAi =
 class HelaAI extends StatefulWidget {
   final UserModal user;
 
-
-  const HelaAI({Key? key, required this.user, required String img_url}) : super(key: key);
+  const HelaAI({Key? key, required this.user, required String img_url})
+      : super(key: key);
 
   @override
   State<HelaAI> createState() => _HelaAIState();
@@ -48,7 +47,6 @@ class _HelaAIState extends State<HelaAI> {
   bool _speechEnabled = false;
   String _wordSpoken = ' ';
   double _confidenceLevel = 0;
-  
 
   TextEditingController messageController = TextEditingController();
 
@@ -209,6 +207,14 @@ class _HelaAIState extends State<HelaAI> {
     });
   }
 
+  Future<void> speakResponse(String responseText) async {
+    await flutterTts.setLanguage("si-LK");
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.speak(responseText);
+  }
+
+
   Future<void> generateGeminiContent(String translatedText) async {
     isTyping = true;
     final ourUrl =
@@ -232,12 +238,21 @@ class _HelaAIState extends State<HelaAI> {
         handleGeminiResponse(response.body);
       } else {
         print("Error Occurred");
+        translateAndShowGeminiContent(
+            "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
+        isTyping = false;
       }
     } catch (e) {
       print("Error Occurred: $e");
+      isTyping = false;
+      translateAndShowGeminiContent(
+          "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
     }
     typing.remove(helaAi);
+    translateAndShowGeminiContent(
+        "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
     isTyping = false;
+    speakResponse(translatedText);
   }
 
   void translateAndShowGeminiContent(String outputText) {
@@ -254,7 +269,7 @@ class _HelaAIState extends State<HelaAI> {
         );
 
         allMessages.insert(0, m1);
-
+       
         setState(() {});
       });
     });
@@ -380,6 +395,7 @@ class _HelaAIState extends State<HelaAI> {
       ),
       drawer: SideNav(
         user: widget.user,
+        
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -400,7 +416,10 @@ class _HelaAIState extends State<HelaAI> {
                 itemCount: allMessages.length,
                 itemBuilder: (context, index) {
                   final message = allMessages[index];
-                  return ChatBubble(message: message, img_url: widget.user.img_url,);
+                  return ChatBubble(
+                    message: message,
+                    img_url: widget.user.img_url,
+                  );
                 },
               ),
             ),
@@ -521,20 +540,19 @@ class _HelaAIState extends State<HelaAI> {
 final FlutterTts flutterTts = FlutterTts();
 
 class ChatBubble extends StatefulWidget {
-  
   final ChatMessage message;
-   final String img_url;
+  final String img_url;
 
-  const ChatBubble({Key? key, required this.message,required this.img_url}) : super(key: key);
-  
+  const ChatBubble({Key? key, required this.message, required this.img_url})
+      : super(key: key);
 
   @override
   _ChatBubbleState createState() => _ChatBubbleState();
 }
 
 
+
 class _ChatBubbleState extends State<ChatBubble> {
-  
   bool isSpeaking = false;
   Future<void> speakSinhala(String text) async {
     await flutterTts.setLanguage("si-LK");
@@ -551,7 +569,6 @@ class _ChatBubbleState extends State<ChatBubble> {
   Widget build(BuildContext context) {
     final isCurrentUser = widget.message.user == you;
     final ThemeData theme = isCurrentUser ? lightTheme : darkTheme;
-
 
     return ListTile(
       leading: isCurrentUser
@@ -607,7 +624,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               Expanded(
                 child: Text(
                   DateFormat.Hm().format(widget.message.createdAt),
-                  textAlign: isCurrentUser? TextAlign.end:TextAlign.start,
+                  textAlign: isCurrentUser ? TextAlign.end : TextAlign.start,
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
@@ -636,8 +653,6 @@ class TypingIndicator extends StatelessWidget {
     );
   }
 }
-
-
 
 // Asynchronous function to speak the provided text in Sinhala language using FlutterTTS.
 
