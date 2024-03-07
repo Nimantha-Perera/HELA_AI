@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
@@ -57,22 +57,28 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkLoggedInUser();
   }
 
-  Future<void> _checkLoggedInUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+Future<void> _checkLoggedInUser() async {
+  final prefs = await SharedPreferences.getInstance();
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    if (isLoggedIn) {
-      UserModal? user = await _fetchUserData();
-      if (user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HelaAI(user: user, img_url: user.img_url),
-          ),
-        );
-      }
+  print("Is User Logged In: $isLoggedIn");
+
+  if (isLoggedIn) {
+    UserModal? user = await _fetchUserData();
+    print("User Data: $user"); // Add this line to check user data
+
+    if (user != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HelaAI(user: user, img_url: user.img_url),
+        ),
+      );
     }
   }
+}
+
+
 
   Future<UserModal?> _handleSignIn() async {
     try {
@@ -101,6 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Save login status
         await _saveLoginStatus(true);
+        
+        // Save user data
+        await _saveUserData(user);
 
         return UserModal(name: name, email: email, img_url: img_url, uid: uid);
       } else {
@@ -112,14 +121,34 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<UserModal?> _fetchUserData() async {
-    // Implement your logic to fetch user data from storage or backend
-    // and return a UserModal object
-    return null; // Replace with your implementation
+ Future<UserModal?> _fetchUserData() async {
+  // Replace this with your logic to fetch user data from storage or backend
+  // For example, you can use SharedPreferences or make a network request.
+  // Return a UserModal object if user data is available, otherwise return null.
+  final prefs = await SharedPreferences.getInstance();
+  String name = prefs.getString('name') ?? "";
+  String email = prefs.getString('email') ?? "";
+  String uid = prefs.getString('uid') ?? "";
+  String img_url = prefs.getString('img_url') ?? "";
+
+  if (name.isNotEmpty && email.isNotEmpty && uid.isNotEmpty) {
+    return UserModal(name: name, email: email, img_url: img_url, uid: uid);
+  } else {
+    return null;
   }
+}
+
 
   Future<void> _saveLoginStatus(bool isLoggedIn) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', isLoggedIn);
+  }
+
+  Future<void> _saveUserData(User user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', user.displayName ?? "");
+    await prefs.setString('email', user.email ?? "");
+    await prefs.setString('uid', user.uid);
+    await prefs.setString('img_url', user.photoURL ?? "");
   }
 }

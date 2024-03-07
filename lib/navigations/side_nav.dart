@@ -77,15 +77,7 @@ class SideNav extends StatelessWidget {
               Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
           ),
-          ListTile(
-            leading: Icon(Icons.logout), // Icon for dark mode toggle
-            title: Text(
-             'Logout',
-            ),
-            onTap: () {
-              _handleLogOut(context);
-            },
-          ),
+          
           ListTile(
             leading: Icon(Icons.settings), // Icon for dark mode toggle
             title: Text(
@@ -97,6 +89,16 @@ class SideNav extends StatelessWidget {
                   builder: (context) => SettingGPT(),
                 )
               );
+            },
+          ),
+
+          ListTile(
+            leading: Icon(Icons.logout), // Icon for dark mode toggle
+            title: Text(
+             'Logout',
+            ),
+            onTap: () {
+              _handleLogOut(context);
             },
           ),
 
