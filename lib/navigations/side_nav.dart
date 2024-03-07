@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
@@ -6,6 +7,7 @@ import 'package:hela_ai/screens/privacy_policy.dart';
 import 'package:hela_ai/screens/setting.dart';
 import 'package:hela_ai/themprovider/theam.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // Import your ThemeProvider class
 
 class SideNav extends StatelessWidget {
@@ -137,20 +139,24 @@ class SideNav extends StatelessWidget {
 
 
   void _handleLogOut(BuildContext context) async {
-    final GoogleSignIn _googleSignIn = GoogleSignIn();
-    
-    // Sign out from Google account
-    await _googleSignIn.signOut();
+    try {
+      await FirebaseAuth.instance.signOut();
+      await _clearUserData();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      print('Error logging out: $e');
+    }
+}
 
-    // Additional logout logic, if needed (e.g., clear user session)
-
-    // Navigate to the login screen or initial screen
-     // Navigate to the login screen
-     Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginScreen(),
-                ),
-              );
-  }
+Future<void> _clearUserData() async {
+  final prefs = await SharedPreferences.getInstance();
+  prefs.remove('name');
+  prefs.remove('email');
+  prefs.remove('uid');
+  prefs.remove('img_url');
+}
 }
