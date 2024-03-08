@@ -313,7 +313,7 @@ void initState() {
 //     print("Auto Voice Disabled");
 //   }
 // }
-
+// Asynchronous function to speak Sinhala text if text-to-speech is enabled in the settings.
 Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
   // Check if text-to-speech is enabled in the settings
   if (settingsManager.enableAutoVoice) {
@@ -327,7 +327,7 @@ Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
     });
   }
 }
-
+// Translates the given outputText to Sinhala and displays the translated content as a ChatMessage. It also updates the UI by inserting the ChatMessage at the beginning of the list and checks the auto voice setting to speak the translated text if enabled.
 void translateAndShowGeminiContent(String outputText) {
   // Using a translator to translate the outputText to Sinhala ('si')
   translator.translate(outputText, to: 'si').then((value) {
@@ -359,7 +359,7 @@ void translateAndShowGeminiContent(String outputText) {
 
 
 
-
+  // A function that handles the Gemini response by decoding the JSON, extracting specific parts, reconstructing the text with bold formatting using RichText widget, creating a RichText widget to display the formatted text, converting the RichText to a plain String, and finally calling the translateAndShowGeminiContent function with the plain text. It catches any errors that occur during the process and prints an error message.
 
   void handleGeminiResponse(String responseBody) {
     try {

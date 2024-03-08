@@ -59,15 +59,37 @@ dependencies:
   flutter_tts: ^3.8.5
   flutter_launcher_icons: ^0.13.1
   shared_preferences: ^2.2.2
+  animated_splash_screen: ^1.3.0
+  flutter_native_splash: ^2.3.10
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+flutter_native_splash:
+  android: true
+  ios: true
+  color: "#ffffff"
+  color_dark: "#ffffff"
+  image: assets/images/lion_avetar.png
+
+  android_12:
+    color: "#ffffff"
+    color_dark: "#ffffff"
+    image: assets/images/lion_avetar.png
+
+
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/images/hela_gpt.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
+
+
+
+
+
+
+
 
 
   # The "flutter_lints" package below contains a set of recommended lints to

@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hela_ai/setting_maneger/settign_maneger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hela_ai/themprovider/theam.dart';
+import 'package:hela_ai/themprovider/theamdata.dart';
+import 'package:provider/provider.dart';
 
 class SettingGPT extends StatefulWidget {
   const SettingGPT({Key? key}) : super(key: key);
@@ -16,10 +19,9 @@ class _SettingGPTState extends State<SettingGPT> {
   @override
   void initState() {
     super.initState();
-    _loadSettings(); // Load saved settings when the widget is initialized
+    _saveSettings();
+    _loadSettings();
   }
-
-  // Function to load settings from shared preferences
 
   _loadSettings() async {
     await _settingsManager.loadSettings();
@@ -34,6 +36,8 @@ class _SettingGPTState extends State<SettingGPT> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Setting"),
@@ -44,7 +48,7 @@ class _SettingGPTState extends State<SettingGPT> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Voice Settings',
+              'Voice',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 15),
@@ -53,25 +57,38 @@ class _SettingGPTState extends State<SettingGPT> {
               children: [
                 Text('Enable Auto Voice'),
                 Switch(
-                  
                   value: _enableAutoVoice,
                   onChanged: (value) {
                     setState(() {
                       _enableAutoVoice = value;
-                      _settingsManager.toggleAutoVoice(); // Toggle the setting
-                      _saveSettings(); // Save the setting when it changes
+                      _settingsManager.toggleAutoVoice();
+                      _saveSettings();
                     });
                   },
-                  activeColor: Colors.blue, // Customizable
+                  activeColor: Colors.blue,
                 ),
               ],
             ),
             Divider(),
             SizedBox(height: 15),
-            // ... (unchanged code)
-
-
-            
+            Text(
+              'Theme',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Dark Mode'),
+                Switch(
+                  value: themeProvider.isDarkMode,
+                  onChanged: (value) {
+                    themeProvider.toggleTheme();
+                  },
+                  activeColor: Colors.blue,
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -80,7 +97,19 @@ class _SettingGPTState extends State<SettingGPT> {
 }
 
 void main() {
-  runApp(MaterialApp(
-    home: SettingGPT(),
-  ));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: Builder(
+        builder: (context) => MaterialApp(
+          home: SettingGPT(),
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: Provider.of<ThemeProvider>(context).isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
+        ),
+      ),
+    ),
+  );
 }

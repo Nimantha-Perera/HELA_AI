@@ -68,17 +68,17 @@ class SideNav extends StatelessWidget {
           //     // Add functionality for Profile
           //   },
           // ),
-          ListTile(
-            leading: Icon(Icons.brightness_6), // Icon for dark mode toggle
-            title: Text(
-              Provider.of<ThemeProvider>(context).isDarkMode
-                  ? 'Light Mode'
-                  : 'Dark Mode',
-            ),
-            onTap: () {
-              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
-            },
-          ),
+          // ListTile(
+          //   leading: Icon(Icons.brightness_6), // Icon for dark mode toggle
+          //   title: Text(
+          //     Provider.of<ThemeProvider>(context).isDarkMode
+          //         ? 'Light Mode'
+          //         : 'Dark Mode',
+          //   ),
+          //   onTap: () {
+          //     Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+          //   },
+          // ),
           
           ListTile(
             leading: Icon(Icons.settings), // Icon for dark mode toggle

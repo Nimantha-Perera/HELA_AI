@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/screens/hela_ai.dart';
@@ -22,13 +23,21 @@ class _LoginScreenState extends State<LoginScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+
+          
           Padding(
             padding: const EdgeInsets.only(top: 40),
             child: Text(
-              "Welcome to the හෙළ GPT",
+              "හෙළ GPT",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
+       
+
+
+          Lottie.asset("assets/images/brane.json", width: 200, height: 200),
+
+
           SizedBox(height: 20),
           Center(
             child: ElevatedButton(
