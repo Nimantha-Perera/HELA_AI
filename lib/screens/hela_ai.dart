@@ -15,6 +15,7 @@ import 'package:hela_ai/themprovider/theamdata.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translator/translator.dart';
@@ -57,14 +58,61 @@ class _HelaAIState extends State<HelaAI> {
 
   GoogleTranslator translator = GoogleTranslator();
 
-  void initState() {
-    super.initState();
-    Future.delayed(Duration(seconds: 1), () {
-      showTutorial();
-      initSpeech();
+  bool isFirstTime = true;
+
+void initState() {
+  super.initState();
+  checkAutoVoiceStatus();
+  Future.delayed(Duration(seconds: 1), () {
+    if (isFirstTime) {
+     checkTutorialStatus();
+      isFirstTime = false; // Update the variable to indicate that the tutorial has been shown
+    }
+    initSpeech();
+  });
+}
+
+ SettingsManager _settingsManager = SettingsManager();
+  late bool _autoVoiceStatus;
+
+
+  Future<void> _loadAutoVoiceStatus() async {
+    await _settingsManager.loadSettings();
+    setState(() {
+      _autoVoiceStatus = _settingsManager.enableAutoVoice;
     });
   }
 
+  void checkAutoVoiceStatus() async {
+    await _loadAutoVoiceStatus();
+    print('Auto Voice is ${_autoVoiceStatus ? 'enabled' : 'disabled'}');
+  }
+
+
+// check first time user tutorial show 
+
+ Future<void> checkTutorialStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      isFirstTime = prefs.getBool('isFirstTime') ?? true;
+
+      if (isFirstTime) {
+        Future.delayed(Duration(seconds: 1), () {
+          showTutorial();
+          print("Firstime user");
+          prefs.setBool('isFirstTime', false); // Update the variable in SharedPreferences
+          initSpeech();
+        });
+      } else {
+        // Tutorial already shown, proceed directly to initSpeech()
+        Future.delayed(Duration(seconds: 1), () {
+          initSpeech();
+          print("2nd time user");
+        });
+      }
+    });
+  }
   // Initialize speech functionality asynchronously.
   void initSpeech() async {
     _speechEnabled = await _speechToText.initialize();
@@ -247,7 +295,7 @@ class _HelaAIState extends State<HelaAI> {
     isTyping = false;
   }
 
-  SettingsManager _settingsManager = SettingsManager();
+
 
 // Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
 //   // ... (existing code)
@@ -266,27 +314,46 @@ class _HelaAIState extends State<HelaAI> {
 //   }
 // }
 
-  void translateAndShowGeminiContent(String outputText) {
-    translator.translate(outputText, to: 'si').then((value) {
-      setState(() {
-        String translatedText = value.toString();
-        print(translatedText);
+Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
+  // Check if text-to-speech is enabled in the settings
+  if (settingsManager.enableAutoVoice) {
+     await flutterTts.setLanguage("si-LK");
+    await flutterTts.setPitch(1.0);
+    await flutterTts.setSpeechRate(0.5);
+    await flutterTts.speak(text);
 
-        // Display the translated content
-        ChatMessage m1 = ChatMessage(
-          user: helaAi,
-          createdAt: DateTime.now(),
-          text: translatedText,
-        );
-
-        allMessages.insert(0, m1);
-        // speakSinhala(translatedText, _settingsManager);
-        setState(() {
-          
-        });
-      });
+    setState(() {
+    
     });
   }
+}
+
+  void translateAndShowGeminiContent(String outputText) {
+  translator.translate(outputText, to: 'si').then((value) {
+    String translatedText = value.toString();
+    print(translatedText);
+
+    // Display the translated content
+    ChatMessage m1 = ChatMessage(
+      user: helaAi,
+      createdAt: DateTime.now(),
+      text: translatedText,
+    );
+
+    setState(() {
+      allMessages.insert(0, m1);
+
+      // Check the auto voice setting
+      if (_settingsManager.enableAutoVoice) {
+        // If auto voice is enabled, speak the translated text
+        speakSinhala(translatedText, _settingsManager);
+      }
+    });
+  });
+}
+
+
+
 
   void handleGeminiResponse(String responseBody) {
     try {

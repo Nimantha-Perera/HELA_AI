@@ -53,6 +53,7 @@ class _SettingGPTState extends State<SettingGPT> {
               children: [
                 Text('Enable Auto Voice'),
                 Switch(
+                  
                   value: _enableAutoVoice,
                   onChanged: (value) {
                     setState(() {
