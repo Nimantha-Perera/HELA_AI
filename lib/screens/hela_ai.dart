@@ -328,18 +328,23 @@ Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
   }
 }
 
-  void translateAndShowGeminiContent(String outputText) {
+void translateAndShowGeminiContent(String outputText) {
+  // Using a translator to translate the outputText to Sinhala ('si')
   translator.translate(outputText, to: 'si').then((value) {
+    // Retrieve the translated text
     String translatedText = value.toString();
+    
+    // Print the translated text to the console
     print(translatedText);
 
-    // Display the translated content
+    // Display the translated content as a ChatMessage
     ChatMessage m1 = ChatMessage(
       user: helaAi,
       createdAt: DateTime.now(),
       text: translatedText,
     );
 
+    // Update the UI by inserting the ChatMessage at the beginning of the list
     setState(() {
       allMessages.insert(0, m1);
 
@@ -351,6 +356,7 @@ Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
     });
   });
 }
+
 
 
 
