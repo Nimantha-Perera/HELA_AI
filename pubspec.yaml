@@ -64,6 +64,8 @@ dependencies:
   flutter_native_splash: ^2.3.10
   feedback: ^3.0.1
   firebase_database: ^10.4.0
+  googleapis: ^13.1.0
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:

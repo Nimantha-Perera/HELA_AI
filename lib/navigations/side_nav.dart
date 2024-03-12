@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hela_ai/feedback/feedback.dart';
 
 import 'package:hela_ai/get_user_modal/user_modal.dart';
+import 'package:hela_ai/screens/img_generator.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/screens/privacy_policy.dart';
 import 'package:hela_ai/screens/setting.dart';
@@ -119,6 +120,19 @@ class SideNav extends StatelessWidget {
               );
             },
           ),
+          ListTile(
+            leading: Icon(Icons.feedback), // Icon for dark mode toggle
+            title: Text(
+             'Image Genarater',
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ImageGen(),
+                )
+              );
+            },
+          ),
 
           ListTile(
             leading: Icon(Icons.privacy_tip), // Icon for dark mode toggle
@@ -146,6 +160,7 @@ class SideNav extends StatelessWidget {
               ),
             ),
           ),
+
           // Add more ListTiles for additional items
         ],
       ),
