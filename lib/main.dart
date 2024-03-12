@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hela_ai/screens/hela_ai.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/themprovider/theam.dart';
@@ -27,7 +28,9 @@ class MyApp extends StatelessWidget {
 }
 
 void main() async {
+    await dotenv.load(fileName: "assets/.env");
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: const FirebaseOptions(
        apiKey: "AIzaSyC0aBHLzGXrStv-kmpTPncAMKO5k86QUt8",

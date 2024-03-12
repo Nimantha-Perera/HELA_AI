@@ -121,9 +121,9 @@ class SideNav extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: Icon(Icons.feedback), // Icon for dark mode toggle
+            leading: Icon(Icons.image_aspect_ratio), // Icon for dark mode toggle
             title: Text(
-             'Image Genarater',
+             'Image Explainer',
             ),
             onTap: () {
               Navigator.of(context).push(

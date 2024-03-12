@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:translator/translator.dart';
@@ -50,7 +51,7 @@ class _ImageGenState extends State<ImageGen> {
     }
 
     try {
-      final apiKey = "AIzaSyC6I358RmUE_IErdz9VnwKZjbJQIukHgsI";
+      final apiKey = dotenv.env['API_KEY'] ?? "";
       if (apiKey == null) {
         throw ArgumentError('API_KEY environment variable is not set.');
       }
@@ -83,35 +84,59 @@ class _ImageGenState extends State<ImageGen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Image Description Generator'),
+        title: Text('Image GPT'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: 20),
-            _buildImageInput(),
-            SizedBox(height: 20),
-            _buildTextInput(),
-            SizedBox(height: 20),
-            _buildGenerateButton(),
-            SizedBox(height: 20),
-            _selectedImage != null
-                ? DisplaySelectedImage(image: FileImage(_selectedImage!))
-                : Text('No image selected'),
-            SizedBox(height: 20),
-            _generatedText != null
-                ? Column(
-                    children: [
-                      SizedBox(height: 20),
-                      _translatedText != null
-                          ? Text('Translated Description: $_translatedText')
-                          : Container(),
-                    ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _textInputController,
+                      decoration: InputDecoration(
+                        labelText: 'Enter Text Prompt',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.all(10.0),
+                        prefixIcon: Icon(Icons.architecture),
+                      ),
+                      enabled: _selectedImage !=
+                          null, // Enable only when an image is selected
+                    ),
+                  ),
+                  _buildGenerateButton(),
+                ],
+              ),
+
+              SizedBox(height: 20),
+              _buildImageInput(),
+              // SizedBox(height: 20),
+              // _buildTextInput(),
+              SizedBox(height: 20),
+              // _buildGenerateButton(),
+              SizedBox(height: 20),
+              _selectedImage != null
+                  ? DisplaySelectedImage(image: FileImage(_selectedImage!))
+                  : Text('No image selected'),
+              SizedBox(height: 20),
+              _generatedText != null
+                  ? Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                        children: [
+                          SizedBox(height: 20),
+                          _translatedText != null
+                              ? Text('$_translatedText')
+                              : Container(),
+                        ],
+                      ),
                   )
-                : Container(),
-          ],
+                  : Container(),
+            ],
+          ),
         ),
       ),
     );
@@ -134,9 +159,9 @@ class _ImageGenState extends State<ImageGen> {
   }
 
   Widget _buildGenerateButton() {
-    return ElevatedButton(
-      onPressed: _generateResponse,
-      child: Text('Generate Description'),
+    return IconButton(
+      onPressed: _selectedImage != null ? _generateResponse : null,
+      icon: Icon(Icons.play_arrow),
     );
   }
 }

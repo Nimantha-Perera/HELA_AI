@@ -6,6 +6,7 @@ import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
@@ -281,8 +282,9 @@ class _HelaAIState extends State<HelaAI> {
     };
 
     isTyping = true;
+    final apiKey = dotenv.env['API_KEY'] ?? "";
     final ourUrl =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-001:generateContent?key=AIzaSyC6I358RmUE_IErdz9VnwKZjbJQIukHgsI";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-001:generateContent?key=$apiKey";
     final header = {'Content-Type': 'application/json'};
     final data = {
       "contents": [
