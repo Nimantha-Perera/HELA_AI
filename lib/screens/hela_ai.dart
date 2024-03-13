@@ -27,7 +27,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart'; // Add this line for the platform channel
 import 'package:path/path.dart' as path;
 
-
 bool isTyping = false;
 bool isSpeaking = false;
 
@@ -87,13 +86,7 @@ class _HelaAIState extends State<HelaAI> {
     });
   }
 
-
-
   // image generator
-
-
-
-
 
   void checkAutoVoiceStatus() async {
     await _loadAutoVoiceStatus();
@@ -270,10 +263,13 @@ class _HelaAIState extends State<HelaAI> {
     });
   }
 
-  Future<void> generateGeminiContent(String translatedText) async {
+
+
+  //Gemini Pro Version
+  Future<void> generateGeminiProContent(String translatedText2) async {
     final generationConfig = {
       "temperature":
-          5, // Controls randomness (0.0 = deterministic, 1.0 = very random)
+          1, // Controls randomness (0.0 = deterministic, 1.0 = very random)
       "topK": 1, // Restricts generation to top k most likely words at each step
       "topP":
           1.0, // Restricts generation to words with top cumulative probability
@@ -285,6 +281,59 @@ class _HelaAIState extends State<HelaAI> {
     final apiKey = dotenv.env['API_KEY'] ?? "";
     final ourUrl =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-001:generateContent?key=$apiKey";
+    final header = {'Content-Type': 'application/json'};
+    final data = {
+      "contents": [
+        {
+          "parts": [
+            {"text": translatedText2}
+          ]
+        }
+      ],
+      "generationConfig": generationConfig,
+    };
+
+    try {
+      final response = await http.post(Uri.parse(ourUrl),
+          headers: header, body: jsonEncode(data));
+
+      if (response.statusCode == 200) {
+        handleGeminiResponse(response.body);
+      } else {
+        print("Error Occurred");
+        translateAndShowGeminiContent(
+            "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
+        isTyping = false;
+      }
+    } catch (e) {
+      print("Error Occurred: $e");
+      isTyping = false;
+      translateAndShowGeminiContent(
+          "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
+    }
+    typing.remove(helaAi);
+
+    isTyping = false;
+  }
+
+
+  //Gemini Normle Version
+
+  Future<void> generateGeminiContent(String translatedText) async {
+    final generationConfig = {
+      "temperature":
+          1, // Controls randomness (0.0 = deterministic, 1.0 = very random)
+      "topK": 1, // Restricts generation to top k most likely words at each step
+      "topP":
+          1.0, // Restricts generation to words with top cumulative probability
+      "maxOutputTokens": 2048, // Maximum number of tokens to be generated
+      // Add other configuration properties as needed (refer to Gemini API documentation)
+    };
+
+    isTyping = true;
+    final apiKey = dotenv.env['API_KEY'] ?? "";
+    final ourUrl =
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
     final header = {'Content-Type': 'application/json'};
     final data = {
       "contents": [
