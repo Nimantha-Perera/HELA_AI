@@ -8,6 +8,7 @@ import 'package:hela_ai/screens/img_generator.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/screens/privacy_policy.dart';
 import 'package:hela_ai/screens/setting.dart';
+import 'package:hela_ai/screens/text_to_image.dart';
 import 'package:hela_ai/themprovider/theam.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -129,6 +130,20 @@ class SideNav extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => ImageGen(),
+                )
+              );
+            },
+          ),
+
+          ListTile(
+            leading: Icon(Icons.settings), // Icon for dark mode toggle
+            title: Text(
+             'Text to Image',
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => TexttoImage(),
                 )
               );
             },

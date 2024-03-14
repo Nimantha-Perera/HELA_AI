@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:translator/translator.dart';
+
+bool isLoading = false;
 
 class ImageGen extends StatefulWidget {
   const ImageGen({Key? key}) : super(key: key);
@@ -33,6 +36,7 @@ class _ImageGenState extends State<ImageGen> {
     }
   }
 
+  // Translate and show Gemini content from the given outputText.
   void _translateAndShowGeminiContent(String outputText) {
     translator.translate(outputText, to: 'si').then((value) {
       String translatedText = value.toString();
@@ -45,7 +49,18 @@ class _ImageGenState extends State<ImageGen> {
     });
   }
 
-  Future<void> _generateResponse() async {
+  // A function that translates the input text to English and generates Gemini content based on the translated text.
+  void translateAndGenerateGeminiContent(String inputText) {
+    translator.translate(inputText, to: 'en').then((value) {
+      setState(() {
+        String translatedText2 = value.toString();
+        print(translatedText2);
+        _generateResponse(translatedText2);
+      });
+    });
+  }
+
+  Future<void> _generateResponse(String inputText) async {
     if (_selectedImage == null) {
       return;
     }
@@ -63,7 +78,7 @@ class _ImageGenState extends State<ImageGen> {
       final model = GenerativeModel(model: 'gemini-pro-vision', apiKey: apiKey);
       final imageBytes = await _selectedImage!.readAsBytes();
 
-      final prompt = TextPart(_textInputController.text);
+      final prompt = TextPart(inputText);
       final imagePart = DataPart('image/jpeg', imageBytes);
 
       final response = await model.generateContent([
@@ -100,24 +115,36 @@ class _ImageGenState extends State<ImageGen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textInputController,
-                      decoration: InputDecoration(
-                        labelText: 'Enter Text Prompt',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.all(10.0),
-                        prefixIcon: Icon(Icons.architecture),
+              Container(
+                margin: EdgeInsets.only(top: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textInputController,
+                        decoration: InputDecoration(
+                          labelText: 'Enter Text Prompt',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.all(10.0),
+                          prefixIcon: Icon(Icons.architecture),
+                        ),
+                        onChanged: (text) {
+                          setState(
+                              () {}); // This triggers a rebuild to update the button state
+                        },
                       ),
-                      enabled: _selectedImage != null,
                     ),
-                  ),
-                  _buildGenerateButton(),
-                ],
+                    IconButton(
+                      onPressed: _textInputController.text.isNotEmpty &&
+                              _selectedImage != null
+                          ? () => translateAndGenerateGeminiContent(
+                              _textInputController.text)
+                          : null,
+                      icon: Icon(Icons.play_arrow),
+                    )
+                  ],
+                ),
               ),
-
               SizedBox(height: 20),
               _buildImageInput(),
               SizedBox(height: 20),
@@ -129,16 +156,19 @@ class _ImageGenState extends State<ImageGen> {
                   ? CircularProgressIndicator()
                   : _generatedText != null
                       ? Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
                             children: [
                               SizedBox(height: 20),
                               _translatedText != null
-                                  ? Text('$_translatedText')
+                                  ? Text(
+                                      '$_translatedText',
+                                      style: GoogleFonts.notoSerifSinhala(),
+                                    )
                                   : Container(),
                             ],
                           ),
-                      )
+                        )
                       : Container(),
             ],
           ),
@@ -154,9 +184,12 @@ class _ImageGenState extends State<ImageGen> {
     );
   }
 
-  Widget _buildGenerateButton() {
+  Widget _buildGenerateButton(String inputs) {
+    String outputText = inputs;
     return IconButton(
-      onPressed: _selectedImage != null ? _generateResponse : null,
+      onPressed: _selectedImage != null
+          ? () => translateAndGenerateGeminiContent(outputText)
+          : null,
       icon: Icon(Icons.play_arrow),
     );
   }

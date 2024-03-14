@@ -601,7 +601,7 @@ class _HelaAIState extends State<HelaAI> {
                                 controller: messageController,
                                 decoration: InputDecoration(
                                   hintText: 'Type your message...',
-                                  hintStyle: GoogleFonts.notoSerifSinhala(color: Colors.grey),
+                                  hintStyle:TextStyle(color: Colors.grey),
                                   border: InputBorder.none,
                                 ),
                                 onChanged: (text) {
