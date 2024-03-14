@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
@@ -600,7 +601,7 @@ class _HelaAIState extends State<HelaAI> {
                                 controller: messageController,
                                 decoration: InputDecoration(
                                   hintText: 'Type your message...',
-                                  hintStyle: TextStyle(color: Colors.grey),
+                                  hintStyle: GoogleFonts.notoSerifSinhala(color: Colors.grey),
                                   border: InputBorder.none,
                                 ),
                                 onChanged: (text) {
@@ -748,7 +749,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             ),
             child: Text(
               widget.message.text,
-              style: TextStyle(
+              style: GoogleFonts.notoSerifSinhala(
                 color: isCurrentUser
                     ? Colors.white
                     : const Color.fromARGB(255, 255, 255, 255),
