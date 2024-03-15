@@ -11,6 +11,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Color.fromARGB(255, 48, 48, 48),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Padding(

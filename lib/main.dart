@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hela_ai/screens/agreement.dart';
 import 'package:hela_ai/screens/hela_ai.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/themprovider/theam.dart';
@@ -54,7 +55,7 @@ class MyApp extends StatelessWidget {
           darkTheme: darkTheme,
           themeMode: ThemeMode.system,
           debugShowCheckedModeBanner: false,
-          home: LoginScreen(),
+          home: UserAgreement(),
         );
       },
     );

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hela_ai/ads/init_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:translator/translator.dart';
@@ -16,12 +17,21 @@ class ImageGen extends StatefulWidget {
   _ImageGenState createState() => _ImageGenState();
 }
 
+InterstitialAdManager interstitialAdManager = InterstitialAdManager();
+
 class _ImageGenState extends State<ImageGen> {
   File? _selectedImage;
   String? _generatedText;
   String? _translatedText;
   TextEditingController _textInputController = TextEditingController();
   bool _isGenerating = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    interstitialAdManager.initInterstitialAd();
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -107,7 +117,14 @@ class _ImageGenState extends State<ImageGen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Image GPT'),
+        title: Text(
+          'Image GPT',
+          style: TextStyle(
+            color: const Color.fromARGB(255, 255, 255, 255),
+          ),
+        ),
+        backgroundColor: Color.fromARGB(255, 48, 48, 48),
+        iconTheme: IconThemeData(color: Color.fromARGB(255, 255, 255, 255)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -137,8 +154,13 @@ class _ImageGenState extends State<ImageGen> {
                     IconButton(
                       onPressed: _textInputController.text.isNotEmpty &&
                               _selectedImage != null
-                          ? () => translateAndGenerateGeminiContent(
-                              _textInputController.text)
+                          ? () {
+                              // Assuming this method shows the ad
+                              interstitialAdManager.showInterstitialAd();
+                              translateAndGenerateGeminiContent(
+                                  _textInputController.text);
+                               // Assuming this method shows the ad
+                            }
                           : null,
                       icon: Icon(Icons.play_arrow),
                     )

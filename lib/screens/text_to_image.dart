@@ -28,7 +28,7 @@ class _TexttoImageState extends State<TexttoImage> {
 
   Widget brainFusion() {
     return FutureBuilder<Uint8List>(
-      future: generate('YOUR TEXT'),
+      future: generate('Dog'),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();

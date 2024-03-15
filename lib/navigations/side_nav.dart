@@ -4,7 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hela_ai/feedback/feedback.dart';
 
 import 'package:hela_ai/get_user_modal/user_modal.dart';
-import 'package:hela_ai/screens/img_generator.dart';
+import 'package:hela_ai/screens/img_to_text.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/screens/privacy_policy.dart';
 import 'package:hela_ai/screens/setting.dart';
@@ -84,43 +84,11 @@ class SideNav extends StatelessWidget {
           //   },
           // ),
           
-          ListTile(
-            leading: Icon(Icons.settings), // Icon for dark mode toggle
-            title: Text(
-             'Setting',
-            ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => SettingGPT(),
-                )
-              );
-            },
-          ),
+         
 
-          ListTile(
-            leading: Icon(Icons.logout), // Icon for dark mode toggle
-            title: Text(
-             'Logout',
-            ),
-            onTap: () {
-              _handleLogOut(context);
-            },
-          ),
+         
 
-          ListTile(
-            leading: Icon(Icons.feedback), // Icon for dark mode toggle
-            title: Text(
-             'Feedback',
-            ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => FeedbackScreen(),
-                )
-              );
-            },
-          ),
+         
           ListTile(
             leading: Icon(Icons.image_aspect_ratio), // Icon for dark mode toggle
             title: Text(
@@ -134,16 +102,64 @@ class SideNav extends StatelessWidget {
               );
             },
           ),
-
-          ListTile(
+           ListTile(
             leading: Icon(Icons.settings), // Icon for dark mode toggle
             title: Text(
-             'Text to Image',
+             'Setting',
             ),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => TexttoImage(),
+                  builder: (context) => SettingGPT(),
+                )
+              );
+            },
+          ),
+
+          // ListTile(
+          //   leading: Icon(Icons.settings), // Icon for dark mode toggle
+          //   title: Text(
+          //    'Text to Image',
+          //   ),
+          //   onTap: () {
+          //     Navigator.of(context).push(
+          //       MaterialPageRoute(
+          //         builder: (context) => TexttoImage(),
+          //       )
+          //     );
+          //   },
+          // ),
+
+          ListTile(
+            leading: Icon(Icons.image_rounded),
+             // Icon for dark mode toggle
+            title: Text(
+             'Text to Image',
+            ),
+            onTap: () {
+              _handleLogOut(context);
+            },
+            enabled: false,
+          ),
+
+           ListTile(
+            leading: Icon(Icons.logout), // Icon for dark mode toggle
+            title: Text(
+             'Logout',
+            ),
+            onTap: () {
+              
+            },
+          ),
+           ListTile(
+            leading: Icon(Icons.feedback), // Icon for dark mode toggle
+            title: Text(
+             'Feedback',
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => FeedbackScreen(),
                 )
               );
             },
@@ -155,11 +171,10 @@ class SideNav extends StatelessWidget {
              'Privacy Policy',
             ),
             onTap: () {
-              Navigator.pushReplacement(
-                context,
+             Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => PrivacyPolicyScreen(),
-                ),
+                )
               );
             },
           ),
