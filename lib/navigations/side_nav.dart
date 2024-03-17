@@ -148,7 +148,8 @@ class SideNav extends StatelessWidget {
              'Logout',
             ),
             onTap: () {
-              
+              _clearUserData();
+               _handleLogOut(context);
             },
           ),
            ListTile(

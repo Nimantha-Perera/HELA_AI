@@ -89,47 +89,70 @@ Future<void> _checkLoggedInUser() async {
 
 
 
-  Future<UserModal?> _handleSignIn() async {
-    try {
-      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+ Future<UserModal?> _handleSignIn() async {
+  try {
+    final GoogleSignInAccount? account = await _googleSignIn.signIn();
 
-      if (account == null) {
-        return null;
-      }
-
-      final GoogleSignInAuthentication googleAuth = await account.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      UserCredential authResult = await FirebaseAuth.instance.signInWithCredential(credential);
-      final User? user = authResult.user;
-
-      if (user != null) {
-        String name = user.displayName ?? "";
-        String email = user.email ?? "";
-        String uid = user.uid;
-        String img_url = user.photoURL ?? "";
-
-        print("User Img Url: $img_url");
-
-        // Save login status
-        await _saveLoginStatus(true);
-        
-        // Save user data
-        await _saveUserData(user);
-
-        return UserModal(name: name, email: email, img_url: img_url, uid: uid);
-      } else {
-        return null;
-      }
-    } catch (error) {
-      print(error);
+    if (account == null) {
       return null;
     }
-  }
 
+    final GoogleSignInAuthentication googleAuth = await account.authentication;
+    final AuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    UserCredential authResult = await FirebaseAuth.instance.signInWithCredential(credential);
+    final User? user = authResult.user;
+
+    if (user != null) {
+      String name = user.displayName ?? "";
+      String email = user.email ?? "";
+      String uid = user.uid;
+      String img_url = user.photoURL ?? "";
+
+      print("User Img Url: $img_url");
+
+      // Save login status
+      await _saveLoginStatus(true);
+      
+      // Save user data
+      await _saveUserData(user);
+
+      return UserModal(name: name, email: email, img_url: img_url, uid: uid);
+    } else {
+      return null;
+    }
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'user-disabled') {
+      // Display an alert dialog indicating that the user account has been disabled
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Account Disabled"),
+            content: Text("The user account has been disabled by an administrator."),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      print(e);
+    }
+    return null;
+  } catch (error) {
+    print(error);
+    return null;
+  }
+}
  Future<UserModal?> _fetchUserData() async {
   // Replace this with your logic to fetch user data from storage or backend
   // For example, you can use SharedPreferences or make a network request.

@@ -156,7 +156,7 @@ class _ImageGenState extends State<ImageGen> {
                               _selectedImage != null
                           ? () {
                               // Assuming this method shows the ad
-                              interstitialAdManager.showInterstitialAd();
+                              // interstitialAdManager.showInterstitialAd();
                               translateAndGenerateGeminiContent(
                                   _textInputController.text);
                                // Assuming this method shows the ad
