@@ -72,6 +72,7 @@ dependencies:
   flutter_gemini: ^2.0.3
   brain_fusion: ^0.1.1
   google_mobile_ads: ^4.0.0
+  cloud_firestore: ^4.15.9
 
 dev_dependencies:
   flutter_test:
