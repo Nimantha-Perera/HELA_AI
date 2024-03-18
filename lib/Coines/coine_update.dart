@@ -1,60 +1,9 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class RewordAdManager {
-  InterstitialAd? interstitialAd;
-  bool isAdLoading = false; // Track ongoing loading requests
-  final adUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/5224354917'
-      : 'ca-app-pub-3940256099942544/1712485313';
-
-  void loadRewordAd() async {
-    try {
-      // Retrieve current amount of coins asynchronously
-      int currentCoins = await getCurrentCoins();
-
-      // Add 20 to the current amount of coins
-      int totalCoins = currentCoins + 20;
-
-      // Check if the total coins is greater than or equal to 20 before showing the ad
-     
-        RewardedAd.load(
-          adUnitId: adUnitId,
-          request: const AdRequest(),
-          rewardedAdLoadCallback: RewardedAdLoadCallback(
-            // Called when an ad is successfully received.
-            onAdLoaded: (ad) {
-              debugPrint('$ad loaded.');
-              showRewordAd(ad);
-            },
-            // Called when an ad request failed.
-            onAdFailedToLoad: (LoadAdError error) {
-              debugPrint('RewardedAd failed to load: $error');
-            },
-          ),
-        );
-      
-    } catch (error) {
-      print('Error loading rewarded ad: $error');
-    }
-  }
-
-  void showRewordAd(RewardedAd ad) {
-    ad.show(
-      onUserEarnedReward: (AdWithoutView ad, RewardItem rewardItem) {
-        // Reward the user for watching an ad.
-        // Implement your logic to give rewards here
-        // For example, if you are adding coins as a reward:
-        num earnedCoins = rewardItem.amount;
-        updateCoins(earnedCoins.toInt());
-      },
-    );
-  }
-
-  Future<void> updateCoins(int earnedCoins) async {
+class CoinsUpdate {
+  static Future<void> updateCoins(int earnedCoins) async {
     try {
       // Get the current user's UID
       String uid = FirebaseAuth.instance.currentUser!.uid;
@@ -63,7 +12,7 @@ class RewordAdManager {
       int currentCoins = await getCurrentCoins();
 
       // Calculate updated coins
-      int updatedCoins = currentCoins + earnedCoins;
+      int updatedCoins = currentCoins - earnedCoins;
 
       // Update the 'coins' field with the new value
       await FirebaseFirestore.instance
@@ -78,7 +27,7 @@ class RewordAdManager {
     }
   }
 
-  Future<int> getCurrentCoins() async {
+  static Future<int> getCurrentCoins() async {
     try {
       // Get the current user's UID
       String uid = FirebaseAuth.instance.currentUser!.uid;

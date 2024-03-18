@@ -73,6 +73,7 @@ dependencies:
   brain_fusion: ^0.1.1
   google_mobile_ads: ^4.0.0
   cloud_firestore: ^4.15.9
+  font_awesome_flutter: ^10.7.0
 
 dev_dependencies:
   flutter_test:

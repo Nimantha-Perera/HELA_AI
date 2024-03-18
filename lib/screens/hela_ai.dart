@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -11,6 +13,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:hela_ai/Coines/coin.dart';
+import 'package:hela_ai/Coines/coine_update.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
@@ -32,6 +35,8 @@ import 'package:path/path.dart' as path;
 bool isTyping = false;
 bool isSpeaking = false;
 
+
+ 
 
 
 ChatUser you = ChatUser(
@@ -324,54 +329,62 @@ class _HelaAIState extends State<HelaAI> {
   //Gemini Normle Version
 
   Future<void> generateGeminiContent(String translatedText) async {
-    final generationConfig = {
-      "temperature":
-          1, // Controls randomness (0.0 = deterministic, 1.0 = very random)
-      "topK": 1, // Restricts generation to top k most likely words at each step
-      "topP":
-          1.0, // Restricts generation to words with top cumulative probability
-      "maxOutputTokens": 2048, // Maximum number of tokens to be generated
-      // Add other configuration properties as needed (refer to Gemini API documentation)
-    };
+       isTyping = true;
+  try {
+    
+    int coins = await getCurrentCoins();
+    
+    if (coins < 10) {
+      translateAndShowGeminiContent("You don't have enough coins.");
+      isTyping = false;
+    } else {
+      final generationConfig = {
+        "temperature": 1,
+        "topK": 1,
+        "topP": 1.0,
+        "maxOutputTokens": 2048,
+        // Add other configuration properties as needed
+      };
 
-    isTyping = true;
-    final apiKey = dotenv.env['API_KEY'] ?? "";
-    final ourUrl =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
-    final header = {'Content-Type': 'application/json'};
-    final data = {
-      "contents": [
-        {
-          "parts": [
-            {"text": translatedText}
-          ]
-        }
-      ],
-      "generationConfig": generationConfig,
-    };
+      isTyping = true;
+      final apiKey = dotenv.env['API_KEY'] ?? "";
+      final ourUrl =
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
+      final header = {'Content-Type': 'application/json'};
+      final data = {
+        "contents": [
+          {
+            "parts": [
+              {"text": translatedText}
+            ]
+          }
+        ],
+        "generationConfig": generationConfig,
+      };
 
-    try {
       final response = await http.post(Uri.parse(ourUrl),
           headers: header, body: jsonEncode(data));
 
       if (response.statusCode == 200) {
         handleGeminiResponse(response.body);
-      } else {
-        print("Error Occurred");
-        translateAndShowGeminiContent(
-            "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
+        await CoinsUpdate.updateCoins(10);
         isTyping = false;
+      } else {
+        print("Error: ${response.statusCode}");
+        translateAndShowGeminiContent(
+            "An error occurred. Please try again later.");
       }
-    } catch (e) {
-      print("Error Occurred: $e");
-      isTyping = false;
-      translateAndShowGeminiContent(
-          "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
     }
-    typing.remove(helaAi);
-
+  } catch (e) {
+    print("Error Occurred: $e");
+    translateAndShowGeminiContent(
+        "An error occurred. Please try again later.");
+  } finally {
     isTyping = false;
+    typing.remove(helaAi);
   }
+}
+
 
 // Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
 //   // ... (existing code)
@@ -406,12 +419,13 @@ class _HelaAIState extends State<HelaAI> {
 // Translates the given outputText to Sinhala and displays the translated content as a ChatMessage. It also updates the UI by inserting the ChatMessage at the beginning of the list and checks the auto voice setting to speak the translated text if enabled.
   void translateAndShowGeminiContent(String outputText) {
     // Using a translator to translate the outputText to Sinhala ('si')
-    translator.translate(outputText, to: 'si').then((value) {
+    translator.translate(outputText, to: 'si').then((value) async {
       // Retrieve the translated text
       String translatedText = value.toString();
 
       // Print the translated text to the console
       print(translatedText);
+  
 
       // Display the translated content as a ChatMessage
       ChatMessage m1 = ChatMessage(

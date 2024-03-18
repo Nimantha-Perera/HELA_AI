@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hela_ai/ads/reword_ads.dart';
 import 'package:hela_ai/feedback/feedback.dart';
 
 import 'package:hela_ai/get_user_modal/user_modal.dart';
+import 'package:hela_ai/screens/buy_coine.dart';
 import 'package:hela_ai/screens/img_to_text.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/screens/privacy_policy.dart';
@@ -85,41 +87,63 @@ class SideNav extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             child: InkWell(
               onTap: () {
-                // Add functionality for adding coins here
-                adManager.loadRewordAd();
+                // Add functionality for reword
+                // adManager.loadRewordAd();
+                Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => CoinBuyScreen(),
+              ));
               },
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 233, 194, 19),
+                  color: const Color(0xEBBD13), // Use color literal for clarity
                   borderRadius: BorderRadius.circular(16.0),
                 ),
                 child: Row(
-                  // Align content to both sides
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween, // Align evenly
                   children: [
-                    StreamBuilder<DocumentSnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('users_google')
-                          .doc(FirebaseAuth.instance.currentUser!.uid)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return Text(
-                            'Loading...', // Display loading message while data is being fetched
-                            style: TextStyle(color: Colors.white),
-                          );
-                        }
-                        int coins = snapshot.data!['coins'] ??
-                            0; // Get current coin count from Firestore
-                        return Text(
-                          '$coins', // Display current coin count
-                          style: TextStyle(color: Colors.white),
-                        );
-                      },
+                    Container(
+                      padding: EdgeInsets.all(5),
+                      color: Color.fromARGB(255, 255, 196, 0),
+                      child: Row(
+                        children: [
+                          FaIcon(
+                            FontAwesomeIcons.coins,
+                            color: Color.fromARGB(255, 56, 56, 56),
+                          ),
+                          const SizedBox(width: 10.0), // Consistent spacing
+                          StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('users_google')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return Text(
+                                  'Loading...',
+                                  style: const TextStyle(
+                                      color: Color.fromARGB(255, 255, 230, 0)),
+                                );
+                              }
+
+                              final int coins = snapshot.data!['coins'] ?? 0;
+                              return Text(
+                                '$coins',
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 88, 88, 88),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(width: 8.0), // Spacing between text and icon
-                    Icon(Icons.add_circle_outline, color: Colors.white),
+                    Icon(
+                      Icons.add_circle_outline,
+                      color: Color.fromARGB(255, 138, 138, 138),
+                    ),
                   ],
                 ),
               ),

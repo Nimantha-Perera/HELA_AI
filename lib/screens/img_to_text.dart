@@ -1,9 +1,15 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hela_ai/Coines/coin.dart';
+import 'package:hela_ai/Coines/coine_update.dart';
 import 'package:hela_ai/ads/init_ads.dart';
+import 'package:hela_ai/screens/buy_coine.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:translator/translator.dart';
@@ -69,6 +75,66 @@ class _ImageGenState extends State<ImageGen> {
       });
     });
   }
+  void showAlertDialog(BuildContext context) {
+  // Show alert dialog
+  
+  showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      backgroundColor: Colors.white,
+     
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Oops! It seems like you don\'t have enough coins.',
+            style: TextStyle(
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(height: 10),
+          
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(
+            'OK',
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+           Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => CoinBuyScreen(),
+              ));
+          },
+          child: Text(
+            'BUY COINS',
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  },
+);
+
+}
+
 
   Future<void> _generateResponse(String inputText) async {
     if (_selectedImage == null) {
@@ -78,6 +144,16 @@ class _ImageGenState extends State<ImageGen> {
     setState(() {
       _isGenerating = true;
     });
+    int coins = await getCurrentCoins();
+    if (coins < 10) {
+       isLoading = false;
+        setState(() {
+        _isGenerating = false;
+      });
+      return showAlertDialog(context);
+      
+
+    }else{
 
     try {
       final apiKey = dotenv.env['API_KEY'] ?? "";
@@ -94,6 +170,7 @@ class _ImageGenState extends State<ImageGen> {
       final response = await model.generateContent([
         Content.multi([prompt, imagePart]),
       ]);
+      await CoinsUpdate.updateCoins(10);
 
       print('Generated response: ${response.text}');
 
@@ -109,6 +186,7 @@ class _ImageGenState extends State<ImageGen> {
         _isGenerating = false;
       });
     }
+    }
   }
 
   GoogleTranslator translator = GoogleTranslator();
@@ -117,6 +195,45 @@ class _ImageGenState extends State<ImageGen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users_google')
+                .doc(FirebaseAuth.instance.currentUser!.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Text(
+                  'Loading...',
+                  style:
+                      const TextStyle(color: Color.fromARGB(255, 255, 230, 0)),
+                );
+              }
+
+              final int coins = snapshot.data!['coins'] ?? 0;
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    
+                    // Consistent spacing
+                    Text(
+                      '$coins',
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 158, 158, 158),
+                      ),
+                    ),
+                    const SizedBox(width: 10.0), 
+                    FaIcon(
+                      FontAwesomeIcons.coins,
+                      color: Color.fromARGB(255, 241, 241, 241),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
         title: Text(
           'Image GPT',
           style: TextStyle(
@@ -157,9 +274,9 @@ class _ImageGenState extends State<ImageGen> {
                           ? () {
                               // Assuming this method shows the ad
                               interstitialAdManager.showInterstitialAd();
-                              // translateAndGenerateGeminiContent(
-                              //     _textInputController.text);
-                               // Assuming this method shows the ad
+                              translateAndGenerateGeminiContent(
+                                  _textInputController.text);
+                              // Assuming this method shows the ad
                             }
                           : null,
                       icon: Icon(Icons.play_arrow),
