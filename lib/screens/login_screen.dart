@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Add user data to Firestore collection "users_google"
             firestore.collection('users_google').doc(uid).set({
               'name': name,
-              'coins': 100,
+              'coins': 0,
               // Add other relevant fields here (with appropriate security rules)
             }).then((_) {
               print(
