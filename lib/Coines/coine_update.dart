@@ -26,6 +26,29 @@ class CoinsUpdate {
       print('Error updating coins in Firestore: $error');
     }
   }
+  static Future<void> updateCoinsPlus(int earnedCoins) async {
+    try {
+      // Get the current user's UID
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+
+      // Get the current coins from Firestore
+      int currentCoins = await getCurrentCoins();
+
+      // Calculate updated coins
+      int updatedCoins = currentCoins + earnedCoins;
+
+      // Update the 'coins' field with the new value
+      await FirebaseFirestore.instance
+          .collection('users_google')
+          .doc(uid)
+          .update({'coins': updatedCoins});
+
+      print('Coins updated successfully in Firestore!');
+    } catch (error) {
+      // Handle any errors that occur during the update process
+      print('Error updating coins in Firestore: $error');
+    }
+  }
 
   static Future<int> getCurrentCoins() async {
     try {

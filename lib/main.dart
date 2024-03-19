@@ -10,8 +10,10 @@ import 'package:hela_ai/update/update.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:provider/provider.dart';
 import 'package:hela_ai/themprovider/theamdata.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 void main() async {
+   
    WidgetsFlutterBinding.ensureInitialized();
   
   // Load environment variables

@@ -106,12 +106,12 @@ class SideNav extends StatelessWidget {
                   children: [
                     Container(
                       padding: EdgeInsets.all(5),
-                      color: Color.fromARGB(255, 255, 196, 0),
+                   
                       child: Row(
                         children: [
                           FaIcon(
                             FontAwesomeIcons.coins,
-                            color: Color.fromARGB(255, 56, 56, 56),
+                            color: Color.fromARGB(255, 255, 187, 0),
                           ),
                           const SizedBox(width: 10.0), // Consistent spacing
                           StreamBuilder<DocumentSnapshot>(

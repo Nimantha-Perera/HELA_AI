@@ -59,7 +59,7 @@ class _UserAgreementState extends State<UserAgreement> {
             ),
             const SizedBox(height: 16.0),
             const Text(
-              'This User Agreement ("Agreement") governs your use of the Hela GPT mobile application ("App"), developed and operated by [Your Company Name] ("we", "us", or "our"). By accessing or using the App, you agree to be bound by the terms and conditions of this Agreement.',
+              'This User Agreement ("Agreement") governs your use of the Hela GPT mobile application, developed and operated by LankaTech innovations (Pvt) Ltd. By accessing or using the App, you agree to be bound by the terms and conditions of this Agreement.',
               style: TextStyle(fontSize: 16.0),
             ),
             const SizedBox(height: 16.0),
@@ -68,7 +68,7 @@ class _UserAgreementState extends State<UserAgreement> {
               style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
             ),
             const Text(
-              'You must be at least [Minimum Age] years of age to use the App. By using the App, you represent and warrant that you meet all of the foregoing eligibility requirements.',
+              'You must be at least 14 years of age to use the App. By using the App, you represent and warrant that you meet all of the foregoing eligibility requirements.',
               style: TextStyle(fontSize: 16.0),
             ),
             const SizedBox(height: 16.0),

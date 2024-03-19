@@ -1,17 +1,45 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lottie/lottie.dart';
 
 class RewordAdManager {
   InterstitialAd? interstitialAd;
   bool isAdLoading = false; // Track ongoing loading requests
   final adUnitId = Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/5224354917'
+      ? 'ca-app-pub-7834397003941676/3730705258'
       : 'ca-app-pub-3940256099942544/1712485313';
 
-  void loadRewordAd() async {
+  void loadRewordAd(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(), // Show CircularProgressIndicator while loading ad
+                SizedBox(
+                    height:
+                        20), // Add spacing between CircularProgressIndicator and text
+                Text(
+                  'wait for loading your ad', // Message indicating ad is being loaded
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
     try {
       // Retrieve current amount of coins asynchronously
       int currentCoins = await getCurrentCoins();
@@ -19,8 +47,7 @@ class RewordAdManager {
       // Add 20 to the current amount of coins
       int totalCoins = currentCoins + 20;
 
-      // Check if the total coins is greater than or equal to 20 before showing the ad
-     
+      if (totalCoins >= 20) {
         RewardedAd.load(
           adUnitId: adUnitId,
           request: const AdRequest(),
@@ -28,21 +55,28 @@ class RewordAdManager {
             // Called when an ad is successfully received.
             onAdLoaded: (ad) {
               debugPrint('$ad loaded.');
-              showRewordAd(ad);
+              Navigator.pop(context); // Dismiss the loading dialog
+              showRewordAd(context, ad); // Show the rewarded ad
             },
             // Called when an ad request failed.
             onAdFailedToLoad: (LoadAdError error) {
               debugPrint('RewardedAd failed to load: $error');
+              Navigator.pop(context); // Dismiss the loading dialog
             },
           ),
         );
-      
+      } else {
+        // If total coins are less than 20, do not attempt to load the ad
+        Navigator.pop(context); // Dismiss the loading dialog
+        print('Error: Insufficient coins to show ad.');
+      }
     } catch (error) {
       print('Error loading rewarded ad: $error');
+      Navigator.pop(context); // Dismiss the loading dialog
     }
   }
 
-  void showRewordAd(RewardedAd ad) {
+  void showRewordAd(BuildContext context, RewardedAd ad) {
     ad.show(
       onUserEarnedReward: (AdWithoutView ad, RewardItem rewardItem) {
         // Reward the user for watching an ad.
@@ -50,9 +84,47 @@ class RewordAdManager {
         // For example, if you are adding coins as a reward:
         num earnedCoins = rewardItem.amount;
         updateCoins(earnedCoins.toInt());
+
+        // Show success dialog after rewarding the user
+        showSuccessDialog(context);
       },
     );
   }
+
+  void showSuccessDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Congratulations!'),
+        contentPadding: EdgeInsets.zero, // Set contentPadding to zero
+        content: Container(
+          padding: EdgeInsets.all(20), // Add padding to the container
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 200, // Adjust the height of the container containing the Lottie animation
+                child: Lottie.network("https://lottie.host/33858213-1302-46e9-b2e0-8f8851d9cb33/gWMTPIV2pj.json", repeat: false),
+              ),
+              SizedBox(height: 20), // Add spacing between the animation and the text
+              Text('You have earned 10 coins!'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Future<void> updateCoins(int earnedCoins) async {
     try {

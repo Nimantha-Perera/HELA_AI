@@ -226,7 +226,7 @@ class _ImageGenState extends State<ImageGen> {
                     const SizedBox(width: 10.0), 
                     FaIcon(
                       FontAwesomeIcons.coins,
-                      color: Color.fromARGB(255, 241, 241, 241),
+                      color: Color.fromARGB(255, 255, 166, 0),
                     ),
                   ],
                 ),

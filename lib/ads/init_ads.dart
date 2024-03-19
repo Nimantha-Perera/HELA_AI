@@ -6,7 +6,7 @@ class InterstitialAdManager {
   InterstitialAd? interstitialAd;
   bool isAdLoading = false; // Track ongoing loading requests
    final adUnitId = Platform.isAndroid
-    ? 'ca-app-pub-3940256099942544/1033173712'
+    ? 'ca-app-pub-7834397003941676/1777182100'
     : 'ca-app-pub-3940256099942544/4411468910';
   Future<void> initInterstitialAd() async {
     try {

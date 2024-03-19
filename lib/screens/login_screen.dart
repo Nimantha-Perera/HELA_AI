@@ -110,31 +110,75 @@ class _LoginScreenState extends State<LoginScreen> {
         String img_url = user.photoURL ?? "";
 
         print("User Img Url: $img_url");
-        //Save logged use firebase
 
-        try {
-          final firestore = FirebaseFirestore.instance;
+        // Check if the user already exists in Firestore
+        final DocumentSnapshot<Map<String, dynamic>> userDoc =
+            await FirebaseFirestore.instance
+                .collection('users_google')
+                .doc(uid)
+                .get();
 
-          // Handle anonymous users or missing data gracefully
-          if (uid != null) {
+        if (!userDoc.exists) {
+          try {
+            final firestore = FirebaseFirestore.instance;
+
             // Add user data to Firestore collection "users_google"
             firestore.collection('users_google').doc(uid).set({
               'name': name,
-              'coins': 0,
+              'coins': 100,
               // Add other relevant fields here (with appropriate security rules)
             }).then((_) {
               print(
                   "Successfully saved user data to Firestore collection 'users_google'!");
+              return showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('Congratulations!'),
+                    contentPadding:
+                        EdgeInsets.zero, // Set contentPadding to zero
+                    content: Container(
+                      padding:
+                          EdgeInsets.all(20), // Add padding to the container
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height:
+                                200, // Adjust the height of the container containing the Lottie animation
+                            child: Lottie.network(
+                                "https://lottie.host/33858213-1302-46e9-b2e0-8f8851d9cb33/gWMTPIV2pj.json",
+                                repeat: false),
+                          ),
+                          SizedBox(
+                              height:
+                                  20), // Add spacing between the animation and the text
+                          Text(
+                              'Congratulations on your first-time login! You have earned a special reward of 100 coins. Enjoy and make the most out of your experience'),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
             }).catchError((error) {
               print(
                   "Error saving user data to Firestore collection 'users_google': $error");
             });
-          } else {
-            print("No user ID found. Unable to save data to Firestore.");
+          } catch (error) {
+            print("Error accessing Firestore: $error");
+            // Handle general Firestore errors
           }
-        } catch (error) {
-          print("Error accessing Firestore: $error");
-          // Handle general Firestore errors
+        } else {
+          print("User already exists in Firestore. Skipping registration.");
         }
 
         // Save login status
@@ -177,6 +221,46 @@ class _LoginScreenState extends State<LoginScreen> {
       return null;
     }
   }
+
+//   void showSuccessDialog(BuildContext context) {
+//   showDialog(
+//     context: context,
+//     builder: (BuildContext context) {
+//       return AlertDialog(
+//         title: Text('Congratulations!'),
+//         contentPadding: EdgeInsets.zero, // Set contentPadding to zero
+//         content: Container(
+//           padding: EdgeInsets.all(20), // Add padding to the container
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               SizedBox(
+//                 height: 200, // Adjust the height of the container containing the Lottie animation
+//                 child: Lottie.network("https://lottie.host/33858213-1302-46e9-b2e0-8f8851d9cb33/gWMTPIV2pj.json", repeat: false),
+//               ),
+//               SizedBox(height: 20), // Add spacing between the animation and the text
+//               Text('Congratulations on your first-time login! You have earned a special reward of 100 coins. Enjoy and make the most out of your experience'),
+//             ],
+//           ),
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () {
+//                Navigator.pushReplacement(
+//                     context,
+//                     MaterialPageRoute(
+//                       builder: (context) =>
+//                           HelaAI(user: user, img_url: user.img_url),
+//                     ),
+//                   );
+//             },
+//             child: Text('OK'),
+//           ),
+//         ],
+//       );
+//     },
+//   );
+// }
 
   Future<UserModal?> _fetchUserData() async {
     // Replace this with your logic to fetch user data from storage or backend

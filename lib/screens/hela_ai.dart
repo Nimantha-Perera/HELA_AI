@@ -21,6 +21,7 @@ import 'package:hela_ai/setting_maneger/settign_maneger.dart';
 import 'package:hela_ai/themprovider/theamdata.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
@@ -129,10 +130,17 @@ class _HelaAIState extends State<HelaAI> {
   }
 
   // Initialize speech functionality asynchronously.
-  void initSpeech() async {
+ bool _isInitializing = false; // Add this variable to track initialization state
+
+void initSpeech() async {
+  if (!_isInitializing) { // Check if initialization is already in progress
+    _isInitializing = true; // Set initialization flag to true
     _speechEnabled = await _speechToText.initialize();
+    _isInitializing = false; // Reset initialization flag
     setState(() {});
   }
+}
+
 
   void _startListening() async {
     await _speechToText.listen(
@@ -248,7 +256,7 @@ class _HelaAIState extends State<HelaAI> {
             align: ContentAlign.bottom,
             builder: (context, controller) {
               return CoachMarkDes(
-                text: "ඔබ ඇසූ ප්‍රශ්න සහ පිලිතුරු යහලුවන් සමභ බෙදාගන්න මෙතනින්",
+                text: "ඔබ ඇසූ ප්‍රශ්න සහ පිලිතුරු යහලුවන් සමඟ බෙදාගන්න මෙතනින්",
                 onSkip: () {
                   controller.skip();
                 },
@@ -372,13 +380,13 @@ class _HelaAIState extends State<HelaAI> {
       } else {
         print("Error: ${response.statusCode}");
         translateAndShowGeminiContent(
-            "An error occurred. Please try again later.");
+            "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
       }
     }
   } catch (e) {
     print("Error Occurred: $e");
     translateAndShowGeminiContent(
-        "An error occurred. Please try again later.");
+        "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
   } finally {
     isTyping = false;
     typing.remove(helaAi);
@@ -437,6 +445,7 @@ class _HelaAIState extends State<HelaAI> {
       // Update the UI by inserting the ChatMessage at the beginning of the list
       setState(() {
         allMessages.insert(0, m1);
+         isTyping = false;
 
         // Check the auto voice setting
         if (_settingsManager.enableAutoVoice) {
@@ -630,9 +639,7 @@ class _HelaAIState extends State<HelaAI> {
                           IconButton(
                             key: voice,
                             onPressed: () {
-                              _speechToText.isNotListening
-                                  ? _startListening()
-                                  : _stopListening();
+                               _handlePermission();
                             },
                             icon: Icon(_speechToText.isNotListening
                                 ? Icons.mic
@@ -679,6 +686,19 @@ class _HelaAIState extends State<HelaAI> {
       ),
     );
   }
+Future<void> _handlePermission() async {
+  // Request microphone permission dynamically
+  PermissionStatus status = await Permission.microphone.request();
+  if (status.isGranted) {
+    _speechToText.isNotListening ? _startListening() : _stopListening();
+  } else if (status.isDenied) {
+    // Permission denied by the user
+    // Handle the situation, maybe show a dialog or message
+  } else if (status.isPermanentlyDenied) {
+    // Permission permanently denied by the user, open app settings
+    openAppSettings();
+  }
+}
 
   List<String> guesses = [
     "oya kwd",
@@ -686,6 +706,10 @@ class _HelaAIState extends State<HelaAI> {
     "ඔයා කවුද?",
     "ඔයා කවුද",
     "ඔයා කවුද හැදුවෙ",
+    "කව්ද"
+    "කව්ද හැදුවෙ",
+    "ඔයා",
+    "ඔයා කව්ද",
     "oya kwd haduwe?",
     "oya kwd haduwe",
     "ඔයා කවුද ඇදුවෙ?"
