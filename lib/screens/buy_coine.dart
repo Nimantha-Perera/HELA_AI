@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hela_ai/Coines/coine_update.dart';
+import 'package:hela_ai/navigations/side_nav.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:lottie/lottie.dart';
 
@@ -75,6 +76,7 @@ class _CoinBuyScreenState extends State<CoinBuyScreen> {
         ),
         onTap: () {
           // Implement logic to watch ads
+          adManager.loadRewordAd(context);
         },
       ),
     );
@@ -142,22 +144,23 @@ class _CoinBuyScreenState extends State<CoinBuyScreen> {
     );
   }
 
-  void _initiatePurchase(String coins) async {
-    // Implement logic to initiate purchase
-    // For example:
-    // Load product details from your backend or use a predefined product ID
-    ProductDetailsResponse productDetails = await _inAppPurchase.queryProductDetails({coins}.toSet());
+void _initiatePurchase(String coins) async {
+  // Implement logic to initiate purchase
+  // For example:
+  // Load product details from your backend or use a predefined product ID
+  ProductDetailsResponse productDetails = await _inAppPurchase.queryProductDetails({coins}.toSet());
 
-    if (productDetails.notFoundIDs.isNotEmpty) {
-      // Handle case where product details are not found
-      print('Product details not found.');
-      return;
-    }
-
-    // Example: Make the purchase
-    PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails.productDetails.first);
-    await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+  if (productDetails.notFoundIDs.isNotEmpty) {
+    // Handle case where product details are not found
+    print('Product details not found.');
+    return;
   }
+
+  // Example: Make the purchase
+  PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails.productDetails.first);
+  await InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam, autoConsume : true);
+}
+
 
   void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
     purchaseDetailsList.forEach((PurchaseDetails purchaseDetails) async {
