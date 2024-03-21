@@ -2,11 +2,18 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:hela_ai/Coines/coin.dart';
+import 'package:hela_ai/Coines/coine_update.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
@@ -14,6 +21,7 @@ import 'package:hela_ai/setting_maneger/settign_maneger.dart';
 import 'package:hela_ai/themprovider/theamdata.dart';
 import 'package:lottie/lottie.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
@@ -23,9 +31,14 @@ import 'package:http/http.dart' as http;
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart'; // Add this line for the platform channel
+import 'package:path/path.dart' as path;
 
 bool isTyping = false;
 bool isSpeaking = false;
+
+
+ 
+
 
 ChatUser you = ChatUser(
     id: "1", firstName: "You", profileImage: 'assets/images/lion_avetar.png');
@@ -60,21 +73,21 @@ class _HelaAIState extends State<HelaAI> {
 
   bool isFirstTime = true;
 
-void initState() {
-  super.initState();
-  checkAutoVoiceStatus();
-  Future.delayed(Duration(seconds: 1), () {
-    if (isFirstTime) {
-     checkTutorialStatus();
-      isFirstTime = false; // Update the variable to indicate that the tutorial has been shown
-    }
-    initSpeech();
-  });
-}
+  void initState() {
+    super.initState();
+    checkAutoVoiceStatus();
+    Future.delayed(Duration(seconds: 1), () {
+      if (isFirstTime) {
+        checkTutorialStatus();
+        isFirstTime =
+            false; // Update the variable to indicate that the tutorial has been shown
+      }
+      initSpeech();
+    });
+  }
 
- SettingsManager _settingsManager = SettingsManager();
+  SettingsManager _settingsManager = SettingsManager();
   late bool _autoVoiceStatus;
-
 
   Future<void> _loadAutoVoiceStatus() async {
     await _settingsManager.loadSettings();
@@ -83,15 +96,16 @@ void initState() {
     });
   }
 
+  // image generator
+
   void checkAutoVoiceStatus() async {
     await _loadAutoVoiceStatus();
     print('Auto Voice is ${_autoVoiceStatus ? 'enabled' : 'disabled'}');
   }
 
+// check first time user tutorial show
 
-// check first time user tutorial show 
-
- Future<void> checkTutorialStatus() async {
+  Future<void> checkTutorialStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     setState(() {
@@ -101,7 +115,8 @@ void initState() {
         Future.delayed(Duration(seconds: 1), () {
           showTutorial();
           print("Firstime user");
-          prefs.setBool('isFirstTime', false); // Update the variable in SharedPreferences
+          prefs.setBool(
+              'isFirstTime', false); // Update the variable in SharedPreferences
           initSpeech();
         });
       } else {
@@ -113,11 +128,19 @@ void initState() {
       }
     });
   }
+
   // Initialize speech functionality asynchronously.
-  void initSpeech() async {
+ bool _isInitializing = false; // Add this variable to track initialization state
+
+void initSpeech() async {
+  if (!_isInitializing) { // Check if initialization is already in progress
+    _isInitializing = true; // Set initialization flag to true
     _speechEnabled = await _speechToText.initialize();
+    _isInitializing = false; // Reset initialization flag
     setState(() {});
   }
+}
+
 
   void _startListening() async {
     await _speechToText.listen(
@@ -233,7 +256,7 @@ void initState() {
             align: ContentAlign.bottom,
             builder: (context, controller) {
               return CoachMarkDes(
-                text: "ඔබ ඇසූ ප්‍රශ්න සහ පිලිතුරු යහලුවන් සමභ බෙදාගන්න මෙතනින්",
+                text: "ඔබ ඇසූ ප්‍රශ්න සහ පිලිතුරු යහලුවන් සමඟ බෙදාගන්න මෙතනින්",
                 onSkip: () {
                   controller.skip();
                 },
@@ -257,19 +280,34 @@ void initState() {
     });
   }
 
-  Future<void> generateGeminiContent(String translatedText) async {
+
+
+  //Gemini Pro Version
+  Future<void> generateGeminiProContent(String translatedText2) async {
+    final generationConfig = {
+      "temperature":
+          1, // Controls randomness (0.0 = deterministic, 1.0 = very random)
+      "topK": 1, // Restricts generation to top k most likely words at each step
+      "topP":
+          1.0, // Restricts generation to words with top cumulative probability
+      "maxOutputTokens": 2048, // Maximum number of tokens to be generated
+      // Add other configuration properties as needed (refer to Gemini API documentation)
+    };
+
     isTyping = true;
+    final apiKey = dotenv.env['API_KEY'] ?? "";
     final ourUrl =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyC6I358RmUE_IErdz9VnwKZjbJQIukHgsI";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
     final header = {'Content-Type': 'application/json'};
-    var data = {
+    final data = {
       "contents": [
         {
           "parts": [
-            {"text": translatedText}
+            {"text": translatedText2}
           ]
         }
-      ]
+      ],
+      "generationConfig": generationConfig,
     };
 
     try {
@@ -296,6 +334,65 @@ void initState() {
   }
 
 
+  //Gemini Normle Version
+
+  Future<void> generateGeminiContent(String translatedText) async {
+       isTyping = true;
+  try {
+    
+    int coins = await getCurrentCoins();
+    
+    if (coins < 10) {
+      translateAndShowGeminiContent("You don't have enough coins.");
+      isTyping = false;
+    } else {
+      final generationConfig = {
+        "temperature": 1,
+        "topK": 1,
+        "topP": 1.0,
+        "maxOutputTokens": 2048,
+        // Add other configuration properties as needed
+      };
+
+      isTyping = true;
+      final apiKey = dotenv.env['API_KEY'] ?? "";
+      final ourUrl =
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
+      final header = {'Content-Type': 'application/json'};
+      final data = {
+        "contents": [
+          {
+            "parts": [
+              {"text": translatedText}
+            ]
+          }
+        ],
+        "generationConfig": generationConfig,
+      };
+
+      final response = await http.post(Uri.parse(ourUrl),
+          headers: header, body: jsonEncode(data));
+
+      if (response.statusCode == 200) {
+        handleGeminiResponse(response.body);
+        await CoinsUpdate.updateCoins(10);
+        isTyping = false;
+      } else {
+        print("Error: ${response.statusCode}");
+        translateAndShowGeminiContent(
+            "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
+      }
+    }
+  } catch (e) {
+    print("Error Occurred: $e");
+    translateAndShowGeminiContent(
+        "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
+  } finally {
+    isTyping = false;
+    typing.remove(helaAi);
+  }
+}
+
 
 // Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
 //   // ... (existing code)
@@ -314,50 +411,50 @@ void initState() {
 //   }
 // }
 // Asynchronous function to speak Sinhala text if text-to-speech is enabled in the settings.
-Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
-  // Check if text-to-speech is enabled in the settings
-  if (settingsManager.enableAutoVoice) {
-     await flutterTts.setLanguage("si-LK");
-    await flutterTts.setPitch(1.0);
-    await flutterTts.setSpeechRate(0.5);
-    await flutterTts.speak(text);
+  Future<void> speakSinhala(
+      String text, SettingsManager settingsManager) async {
+    // Check if text-to-speech is enabled in the settings
+    if (settingsManager.enableAutoVoice) {
+      await flutterTts.setLanguage("si-LK");
+      await flutterTts.setPitch(1.0);
+      await flutterTts.setSpeechRate(0.5);
+      await flutterTts.speak(text);
 
-    setState(() {
-    
+      setState(() {});
+    }
+  }
+
+// Translates the given outputText to Sinhala and displays the translated content as a ChatMessage. It also updates the UI by inserting the ChatMessage at the beginning of the list and checks the auto voice setting to speak the translated text if enabled.
+  void translateAndShowGeminiContent(String outputText) {
+    // Using a translator to translate the outputText to Sinhala ('si')
+    translator.translate(outputText, to: 'si').then((value) async {
+      // Retrieve the translated text
+      String translatedText = value.toString();
+
+      // Print the translated text to the console
+      print(translatedText);
+  
+
+      // Display the translated content as a ChatMessage
+      ChatMessage m1 = ChatMessage(
+        user: helaAi,
+        createdAt: DateTime.now(),
+        text: translatedText,
+      );
+
+      // Update the UI by inserting the ChatMessage at the beginning of the list
+      setState(() {
+        allMessages.insert(0, m1);
+         isTyping = false;
+
+        // Check the auto voice setting
+        if (_settingsManager.enableAutoVoice) {
+          // If auto voice is enabled, speak the translated text
+          speakSinhala(translatedText, _settingsManager);
+        }
+      });
     });
   }
-}
-// Translates the given outputText to Sinhala and displays the translated content as a ChatMessage. It also updates the UI by inserting the ChatMessage at the beginning of the list and checks the auto voice setting to speak the translated text if enabled.
-void translateAndShowGeminiContent(String outputText) {
-  // Using a translator to translate the outputText to Sinhala ('si')
-  translator.translate(outputText, to: 'si').then((value) {
-    // Retrieve the translated text
-    String translatedText = value.toString();
-    
-    // Print the translated text to the console
-    print(translatedText);
-
-    // Display the translated content as a ChatMessage
-    ChatMessage m1 = ChatMessage(
-      user: helaAi,
-      createdAt: DateTime.now(),
-      text: translatedText,
-    );
-
-    // Update the UI by inserting the ChatMessage at the beginning of the list
-    setState(() {
-      allMessages.insert(0, m1);
-
-      // Check the auto voice setting
-      if (_settingsManager.enableAutoVoice) {
-        // If auto voice is enabled, speak the translated text
-        speakSinhala(translatedText, _settingsManager);
-      }
-    });
-  });
-}
-
-
 
   // A function that handles the Gemini response by decoding the JSON, extracting specific parts, reconstructing the text with bold formatting using RichText widget, creating a RichText widget to display the formatted text, converting the RichText to a plain String, and finally calling the translateAndShowGeminiContent function with the plain text. It catches any errors that occur during the process and prints an error message.
 
@@ -530,7 +627,7 @@ void translateAndShowGeminiContent(String outputText) {
                                 controller: messageController,
                                 decoration: InputDecoration(
                                   hintText: 'Type your message...',
-                                  hintStyle: TextStyle(color: Colors.grey),
+                                  hintStyle:TextStyle(color: Colors.grey),
                                   border: InputBorder.none,
                                 ),
                                 onChanged: (text) {
@@ -542,9 +639,7 @@ void translateAndShowGeminiContent(String outputText) {
                           IconButton(
                             key: voice,
                             onPressed: () {
-                              _speechToText.isNotListening
-                                  ? _startListening()
-                                  : _stopListening();
+                               _handlePermission();
                             },
                             icon: Icon(_speechToText.isNotListening
                                 ? Icons.mic
@@ -591,6 +686,19 @@ void translateAndShowGeminiContent(String outputText) {
       ),
     );
   }
+Future<void> _handlePermission() async {
+  // Request microphone permission dynamically
+  PermissionStatus status = await Permission.microphone.request();
+  if (status.isGranted) {
+    _speechToText.isNotListening ? _startListening() : _stopListening();
+  } else if (status.isDenied) {
+    // Permission denied by the user
+    // Handle the situation, maybe show a dialog or message
+  } else if (status.isPermanentlyDenied) {
+    // Permission permanently denied by the user, open app settings
+    openAppSettings();
+  }
+}
 
   List<String> guesses = [
     "oya kwd",
@@ -598,6 +706,10 @@ void translateAndShowGeminiContent(String outputText) {
     "ඔයා කවුද?",
     "ඔයා කවුද",
     "ඔයා කවුද හැදුවෙ",
+    "කව්ද"
+    "කව්ද හැදුවෙ",
+    "ඔයා",
+    "ඔයා කව්ද",
     "oya kwd haduwe?",
     "oya kwd haduwe",
     "ඔයා කවුද ඇදුවෙ?"
@@ -678,7 +790,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             ),
             child: Text(
               widget.message.text,
-              style: TextStyle(
+              style: GoogleFonts.notoSerifSinhala(
                 color: isCurrentUser
                     ? Colors.white
                     : const Color.fromARGB(255, 255, 255, 255),
