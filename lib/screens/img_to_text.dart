@@ -9,12 +9,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hela_ai/Coines/coin.dart';
 import 'package:hela_ai/Coines/coine_update.dart';
 import 'package:hela_ai/ads/init_ads.dart';
+import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/screens/buy_coine.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:translator/translator.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 bool isLoading = false;
+ List<TargetFocus> targets = [];
 
 class ImageGen extends StatefulWidget {
   const ImageGen({Key? key}) : super(key: key);
@@ -31,12 +35,135 @@ class _ImageGenState extends State<ImageGen> {
   String? _translatedText;
   TextEditingController _textInputController = TextEditingController();
   bool _isGenerating = false;
+  bool isFirstTime = true;
+
 
   @override
   void initState() {
     super.initState();
-
+    Future.delayed(Duration(seconds: 1), () {
+      if (isFirstTime) {
+        checkTutorialStatus();
+        isFirstTime =
+            false; // Update the variable to indicate that the tutorial has been shown
+      }
+     
+    });
     interstitialAdManager.initInterstitialAd();
+  }
+  Future<void> checkTutorialStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      isFirstTime = prefs.getBool('isFirstTime_img_to_text') ?? true;
+
+      if (isFirstTime) {
+        Future.delayed(Duration(seconds: 1), () {
+          showTutorial();
+          print("Firstime user");
+          prefs.setBool(
+              'isFirstTime_img_to_text', false); // Update the variable in SharedPreferences
+     
+        });
+      } else {
+        // Tutorial already shown, proceed directly to initSpeech()
+        Future.delayed(Duration(seconds: 1), () {
+ 
+          print("2nd time user");
+        });
+      }
+    });
+  }
+
+  //Tutorial shownm
+
+   void showTutorial() {
+    _initTargets();
+    TutorialCoachMark tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+    )..show(context: context);
+  }
+
+  // Globle Keys
+
+  GlobalKey gen_btn = GlobalKey();
+  GlobalKey pick = GlobalKey();
+  GlobalKey text = GlobalKey();
+  GlobalKey text_area = GlobalKey();
+
+
+  // Initialize the targets for the CoachMark library, including menu and share targets.
+  void _initTargets() {
+    targets = [
+      TargetFocus(
+        
+          identify: "pick_key",
+          keyTarget: pick,
+          contents: [
+            TargetContent(
+                align: ContentAlign.bottom,
+                builder: (context, controller) {
+                  return CoachMarkDes(
+                    text: "පළමුව Image එක Select කරන්න.",
+                    onSkip: () {
+                      controller.skip();
+                    },
+                    onNext: () {
+                      controller.next();
+                    },
+                  );
+                })
+          ]),
+      TargetFocus(identify: "text-key",  shape: ShapeLightFocus.RRect, keyTarget: text, contents: [
+        
+        TargetContent(
+          
+            align: ContentAlign.bottom,
+            
+            builder: (context, controller) {
+              return CoachMarkDes(
+                text: "Promt(ජායාරූපය පිලිබඳ දැනගැනීමට අවශ්‍ය කරුණ) ඇතුලත් කරන්න",
+                onSkip: () {
+                  controller.skip();
+                },
+                onNext: () {
+                  controller.next();
+                },
+              );
+            })
+      ]),
+      TargetFocus(identify: "gen-key", keyTarget: gen_btn, contents: [
+        TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return CoachMarkDes(
+                text: "ඉන්පසුව Send කරන්න",
+                onSkip: () {
+                  controller.skip();
+                },
+                onNext: () {
+                  controller.next();
+                },
+              );
+            })
+      ]),
+      TargetFocus(identify: "area-key", keyTarget: text_area, contents: [
+        TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return CoachMarkDes(
+                text: "ඔබ ඇසූ ප්‍රශ්න සහ පිලිතුරු යහලුවන් සමඟ බෙදාගන්න මෙතනින්",
+                onSkip: () {
+                  controller.skip();
+                },
+                onNext: () {
+                  controller.next();
+                },
+              );
+            })
+      ]),
+      // Add more TargetFocus objects if needed
+    ];
   }
 
   Future<void> _pickImage() async {
@@ -255,6 +382,7 @@ class _ImageGenState extends State<ImageGen> {
                   children: [
                     Expanded(
                       child: TextField(
+                        key: text,
                         controller: _textInputController,
                         decoration: InputDecoration(
                           labelText: 'Enter Text Prompt',
@@ -269,6 +397,7 @@ class _ImageGenState extends State<ImageGen> {
                       ),
                     ),
                     IconButton(
+                      key: gen_btn,
                       onPressed: _textInputController.text.isNotEmpty &&
                               _selectedImage != null
                           ? () {
@@ -318,6 +447,7 @@ class _ImageGenState extends State<ImageGen> {
 
   Widget _buildImageInput() {
     return ElevatedButton(
+      key: pick,
       onPressed: _pickImage,
       child: Text('Pick Image'),
     );

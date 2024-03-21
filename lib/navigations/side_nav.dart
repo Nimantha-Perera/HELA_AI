@@ -84,7 +84,7 @@ class SideNav extends StatelessWidget {
           //   },
           // ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.only(top: 8.0, right: 8.0),
             child: InkWell(
               onTap: () {
                 // Add functionality for reword

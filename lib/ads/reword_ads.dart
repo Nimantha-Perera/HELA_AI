@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hela_ai/Coines/coine_update.dart';
 import 'package:lottie/lottie.dart';
 
 class RewordAdManager {
@@ -78,12 +79,11 @@ class RewordAdManager {
 
   void showRewordAd(BuildContext context, RewardedAd ad) {
     ad.show(
-      onUserEarnedReward: (AdWithoutView ad, RewardItem rewardItem) {
+      onUserEarnedReward: (AdWithoutView ad, RewardItem rewardItem) async {
         // Reward the user for watching an ad.
         // Implement your logic to give rewards here
         // For example, if you are adding coins as a reward:
-        num earnedCoins = rewardItem.amount;
-        updateCoins(earnedCoins.toInt());
+         await CoinsUpdate.updateCoinsPlus(10);
 
         // Show success dialog after rewarding the user
         showSuccessDialog(context);

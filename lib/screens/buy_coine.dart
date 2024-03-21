@@ -14,9 +14,10 @@ class _CoinBuyScreenState extends State<CoinBuyScreen> {
   int _selectedPackageIndex = -1;
 
   List<Map<String, dynamic>> _coinPackages = [
-    {'coins': "100", 'price': 'LKR 200'},
-    {'coins': "250", 'price': 'LKR 350'},
-    {'coins': "500", 'price': 'LKR 500'},
+    {'product_id':"100_hgcx",'coins': "100", 'price': 'LKR 250'},
+    {'product_id':"250_hgcx",'coins': "250", 'price': 'LKR 350'},
+    {'product_id':"500_hgcx",'coins': "500", 'price': 'LKR 500'},
+    {'product_id':"1000_hgcx",'coins': "1000", 'price': 'LKR 1000'}
   ];
 
   @override
@@ -89,7 +90,7 @@ class _CoinBuyScreenState extends State<CoinBuyScreen> {
         setState(() {
           _selectedPackageIndex = index;
         });
-        _initiatePurchase(package['coins']);
+        _initiatePurchase(package['product_id']);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -121,23 +122,23 @@ class _CoinBuyScreenState extends State<CoinBuyScreen> {
               ),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                _initiatePurchase(package['coins']);
-              },
-              child: Text(
-                'Buy',
-                style: TextStyle(fontSize: 16),
-              ),
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
-                  isSelected ? Colors.white : Colors.blueAccent,
-                ),
-                foregroundColor: MaterialStateProperty.all<Color>(
-                  isSelected ? Colors.blueAccent : Colors.white,
-                ),
-              ),
-            ),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     _initiatePurchase(package['coins']);
+            //   },
+            //   child: Text(
+            //     'Buy',
+            //     style: TextStyle(fontSize: 16),
+            //   ),
+            //   style: ButtonStyle(
+            //     backgroundColor: MaterialStateProperty.all<Color>(
+            //       isSelected ? Colors.white : Colors.blueAccent,
+            //     ),
+            //     foregroundColor: MaterialStateProperty.all<Color>(
+            //       isSelected ? Colors.blueAccent : Colors.white,
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -198,13 +199,16 @@ void _initiatePurchase(String coins) async {
   int coinsToAdd = 0;
 
   // Determine the number of coins to add based on the purchase
-  if (purchaseDetails.productID == '500') {
+  if (purchaseDetails.productID == '500_hgcx') {
     coinsToAdd = 500;
-  } else if (purchaseDetails.productID == '100') {
+  } else if (purchaseDetails.productID == '100_hgcx') {
     coinsToAdd = 100;
-  } else if (purchaseDetails.productID == '250') {
+  } else if (purchaseDetails.productID == '250_hgcx') {
     coinsToAdd = 250;
+  } else if (purchaseDetails.productID == '1000_hgcx') {
+    coinsToAdd = 1000;
   }
+
 
   // Add the coins to the user's balance
   await CoinsUpdate.updateCoinsPlus(coinsToAdd);

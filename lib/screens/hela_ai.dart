@@ -297,7 +297,7 @@ void initSpeech() async {
     isTyping = true;
     final apiKey = dotenv.env['API_KEY'] ?? "";
     final ourUrl =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-001:generateContent?key=$apiKey";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
     final header = {'Content-Type': 'application/json'};
     final data = {
       "contents": [
