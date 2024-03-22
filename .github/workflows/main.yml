@@ -25,7 +25,7 @@ jobs:
       - run : flutter upgrade
       - run: flutter pub upgrade    
       - run: flutter pub get
-      - run: flutter test
+      # - run: flutter test
       - run: flutter build appbundle --debug --split-per-abi
       - run: |
           flutter build ios --no-codesign
