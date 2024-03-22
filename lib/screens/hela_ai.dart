@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:hela_ai/Coines/coin.dart';
@@ -17,6 +18,7 @@ import 'package:hela_ai/Coines/coine_update.dart';
 import 'package:hela_ai/coatchmark_des/coatch_mark_des.dart';
 import 'package:hela_ai/get_user_modal/user_modal.dart';
 import 'package:hela_ai/navigations/side_nav.dart';
+import 'package:hela_ai/screens/buy_coine.dart';
 import 'package:hela_ai/setting_maneger/settign_maneger.dart';
 import 'package:hela_ai/themprovider/theamdata.dart';
 import 'package:lottie/lottie.dart';
@@ -35,10 +37,6 @@ import 'package:path/path.dart' as path;
 
 bool isTyping = false;
 bool isSpeaking = false;
-
-
- 
-
 
 ChatUser you = ChatUser(
     id: "1", firstName: "You", profileImage: 'assets/images/lion_avetar.png');
@@ -130,17 +128,18 @@ class _HelaAIState extends State<HelaAI> {
   }
 
   // Initialize speech functionality asynchronously.
- bool _isInitializing = false; // Add this variable to track initialization state
+  bool _isInitializing =
+      false; // Add this variable to track initialization state
 
-void initSpeech() async {
-  if (!_isInitializing) { // Check if initialization is already in progress
-    _isInitializing = true; // Set initialization flag to true
-    _speechEnabled = await _speechToText.initialize();
-    _isInitializing = false; // Reset initialization flag
-    setState(() {});
+  void initSpeech() async {
+    if (!_isInitializing) {
+      // Check if initialization is already in progress
+      _isInitializing = true; // Set initialization flag to true
+      _speechEnabled = await _speechToText.initialize();
+      _isInitializing = false; // Reset initialization flag
+      setState(() {});
+    }
   }
-}
-
 
   void _startListening() async {
     await _speechToText.listen(
@@ -280,8 +279,6 @@ void initSpeech() async {
     });
   }
 
-
-
   //Gemini Pro Version
   Future<void> generateGeminiProContent(String translatedText2) async {
     final generationConfig = {
@@ -333,66 +330,63 @@ void initSpeech() async {
     isTyping = false;
   }
 
-
   //Gemini Normle Version
 
   Future<void> generateGeminiContent(String translatedText) async {
-       isTyping = true;
-  try {
-    
-    int coins = await getCurrentCoins();
-    
-    if (coins < 10) {
-      translateAndShowGeminiContent("You don't have enough coins.");
-      isTyping = false;
-    } else {
-      final generationConfig = {
-        "temperature": 1,
-        "topK": 1,
-        "topP": 1.0,
-        "maxOutputTokens": 2048,
-        // Add other configuration properties as needed
-      };
+    isTyping = true;
+    try {
+      int coins = await getCurrentCoins();
 
-      isTyping = true;
-      final apiKey = dotenv.env['API_KEY'] ?? "";
-      final ourUrl =
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
-      final header = {'Content-Type': 'application/json'};
-      final data = {
-        "contents": [
-          {
-            "parts": [
-              {"text": translatedText}
-            ]
-          }
-        ],
-        "generationConfig": generationConfig,
-      };
-
-      final response = await http.post(Uri.parse(ourUrl),
-          headers: header, body: jsonEncode(data));
-
-      if (response.statusCode == 200) {
-        handleGeminiResponse(response.body);
-        await CoinsUpdate.updateCoins(10);
+      if (coins < 10) {
+        translateAndShowGeminiContent("You don't have enough coins.");
         isTyping = false;
       } else {
-        print("Error: ${response.statusCode}");
-        translateAndShowGeminiContent(
-            "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
-      }
-    }
-  } catch (e) {
-    print("Error Occurred: $e");
-    translateAndShowGeminiContent(
-        "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
-  } finally {
-    isTyping = false;
-    typing.remove(helaAi);
-  }
-}
+        final generationConfig = {
+          "temperature": 1,
+          "topK": 1,
+          "topP": 1.0,
+          "maxOutputTokens": 2048,
+          // Add other configuration properties as needed
+        };
 
+        isTyping = true;
+        final apiKey = dotenv.env['API_KEY'] ?? "";
+        final ourUrl =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
+        final header = {'Content-Type': 'application/json'};
+        final data = {
+          "contents": [
+            {
+              "parts": [
+                {"text": translatedText}
+              ]
+            }
+          ],
+          "generationConfig": generationConfig,
+        };
+
+        final response = await http.post(Uri.parse(ourUrl),
+            headers: header, body: jsonEncode(data));
+
+        if (response.statusCode == 200) {
+          handleGeminiResponse(response.body);
+          await CoinsUpdate.updateCoins(10);
+          isTyping = false;
+        } else {
+          print("Error: ${response.statusCode}");
+          translateAndShowGeminiContent(
+              "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
+        }
+      }
+    } catch (e) {
+      print("Error Occurred: $e");
+      translateAndShowGeminiContent(
+          "කරුනාකර ඔබගේ අන්තර්ජාල සබඳතාව පරීක්ශාකර නැවත උත්සාහ කරන්න.");
+    } finally {
+      isTyping = false;
+      typing.remove(helaAi);
+    }
+  }
 
 // Future<void> speakSinhala(String text, SettingsManager settingsManager) async {
 //   // ... (existing code)
@@ -433,7 +427,6 @@ void initSpeech() async {
 
       // Print the translated text to the console
       print(translatedText);
-  
 
       // Display the translated content as a ChatMessage
       ChatMessage m1 = ChatMessage(
@@ -445,7 +438,7 @@ void initSpeech() async {
       // Update the UI by inserting the ChatMessage at the beginning of the list
       setState(() {
         allMessages.insert(0, m1);
-         isTyping = false;
+        isTyping = false;
 
         // Check the auto voice setting
         if (_settingsManager.enableAutoVoice) {
@@ -551,13 +544,63 @@ void initSpeech() async {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-            key: sharekey,
-            onPressed: () async {
-              await saveChatsToFile();
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users_google')
+                .doc(FirebaseAuth.instance.currentUser!.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Text(
+                  'Loading...',
+                  style:
+                      const TextStyle(color: Color.fromARGB(255, 255, 230, 0)),
+                );
+              }
+
+              final int coins = snapshot.data!['coins'] ?? 0;
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 224, 224, 224),
+                    borderRadius: BorderRadius.circular(
+                        50.0), // Adjust the value as per your requirement
+                  ),
+                  child: Row(
+                    children: [
+                      // Consistent spacing
+
+                      const SizedBox(width: 10.0),
+                      FaIcon(
+                        FontAwesomeIcons.coins,
+                        color: Color.fromARGB(255, 255, 166, 0),
+                      ),
+                      SizedBox(width: 10.0),
+                      Text(
+                        '$coins',
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 158, 158, 158),
+                        ),
+                      ),
+                      IconButton(onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => CoinBuyScreen()));  
+                      }, icon: Icon(Icons.add,size: 15,)),
+                    ],
+                  ),
+                ),
+              );
             },
-            icon: Icon(Icons.share),
           ),
+          // IconButton(
+          //   key: sharekey,
+          //   onPressed: () async {
+          //     await saveChatsToFile();
+          //   },
+          //   icon: Icon(Icons.share),
+          // ),
         ],
         backgroundColor: Color.fromARGB(255, 48, 48, 48),
         title: const Text(
@@ -627,7 +670,7 @@ void initSpeech() async {
                                 controller: messageController,
                                 decoration: InputDecoration(
                                   hintText: 'Type your message...',
-                                  hintStyle:TextStyle(color: Colors.grey),
+                                  hintStyle: TextStyle(color: Colors.grey),
                                   border: InputBorder.none,
                                 ),
                                 onChanged: (text) {
@@ -639,7 +682,7 @@ void initSpeech() async {
                           IconButton(
                             key: voice,
                             onPressed: () {
-                               _handlePermission();
+                              _handlePermission();
                             },
                             icon: Icon(_speechToText.isNotListening
                                 ? Icons.mic
@@ -686,33 +729,44 @@ void initSpeech() async {
       ),
     );
   }
-Future<void> _handlePermission() async {
-  // Request microphone permission dynamically
-  PermissionStatus status = await Permission.microphone.request();
-  if (status.isGranted) {
-    _speechToText.isNotListening ? _startListening() : _stopListening();
-  } else if (status.isDenied) {
-    // Permission denied by the user
-    // Handle the situation, maybe show a dialog or message
-  } else if (status.isPermanentlyDenied) {
-    // Permission permanently denied by the user, open app settings
-    openAppSettings();
+
+  Future<void> _handlePermission() async {
+    // Request microphone permission dynamically
+    PermissionStatus status = await Permission.microphone.request();
+    if (status.isGranted) {
+      _speechToText.isNotListening ? _startListening() : _stopListening();
+    } else if (status.isDenied) {
+      // Permission denied by the user
+      // Handle the situation, maybe show a dialog or message
+    } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied by the user, open app settings
+      openAppSettings();
+    }
   }
-}
 
   List<String> guesses = [
     "oya kwd",
+    "ඔයාගෙ නම මොකක්ද?",
+    "ඔයාගෙ නම මොකක්ද",
+    "oyage nama mokdda?",
+    "oyage nama mokdda",
     "ඔයා",
     "ඔයා කවුද?",
     "ඔයා කවුද",
     "ඔයා කවුද හැදුවෙ",
     "කව්ද"
-    "කව්ද හැදුවෙ",
+        "කව්ද හැදුවෙ",
     "ඔයා",
     "ඔයා කව්ද",
     "oya kwd haduwe?",
     "oya kwd haduwe",
-    "ඔයා කවුද ඇදුවෙ?"
+    "ඔයා කවුද හැදුවෙ?"
+  ];
+  List<String>guesses2 = [
+    "කාසි ගන්නෙ කොහොමද?",
+    "කාසි ගන්නෙ කොහොමද",
+    "kaasi ganne kohomada?",
+    "kaasi ganne kohomada",
   ];
 
   @override
@@ -727,6 +781,17 @@ Future<void> _handlePermission() async {
         setState(
             () {}); // Make sure to call setState to trigger a rebuild if needed
       });
+
+    } else if (guesses2.contains(inputs)) {
+      
+     Future.delayed(Duration(seconds: 2), () {
+        translateAndShowGeminiContent(
+            "කාසි ලබා ගැනීම සඳහා උඩ ඇති කාසි ප්‍රමාණය පෙන්වන තීරයෙහි + ලකුන මත ක්ලික් කරන්න.");
+        typing.remove(helaAi);
+        setState(
+            () {}); // Make sure to call setState to trigger a rebuild if needed
+      });
+
     } else {
       translateAndGenerateGeminiContent(inputs);
       typing.remove(helaAi);
