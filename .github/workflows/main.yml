@@ -50,6 +50,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
-            build/app/outputs/bundle/debug/*.aab
+            build/app/outputs/bundle/release/*.aab
           tag: v1.0.${{ github.run_number }}
           token: ${{ secrets.TOKEN }}
+    
