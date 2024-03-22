@@ -15,6 +15,7 @@ import 'package:hela_ai/screens/privacy_policy.dart';
 import 'package:hela_ai/screens/setting.dart';
 import 'package:hela_ai/screens/text_to_image.dart';
 import 'package:hela_ai/themprovider/theam.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -83,72 +84,72 @@ class SideNav extends StatelessWidget {
           //     Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
           //   },
           // ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0, right: 8.0),
-            child: InkWell(
-              onTap: () {
-                // Add functionality for reword
-                // adManager.loadRewordAd();
-                Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => CoinBuyScreen(),
-              ));
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xEBBD13), // Use color literal for clarity
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-                child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween, // Align evenly
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(5),
-                   
-                      child: Row(
-                        children: [
-                          FaIcon(
-                            FontAwesomeIcons.coins,
-                            color: Color.fromARGB(255, 255, 187, 0),
-                          ),
-                          const SizedBox(width: 10.0), // Consistent spacing
-                          StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection('users_google')
-                                .doc(FirebaseAuth.instance.currentUser!.uid)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return Text(
-                                  'Loading...',
-                                  style: const TextStyle(
-                                      color: Color.fromARGB(255, 255, 230, 0)),
-                                );
-                              }
+          // Padding(
+          //   padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+          //   child: InkWell(
+          //     onTap: () {
+          //       // Add functionality for reword
+          //       // adManager.loadRewordAd();
+          //       Navigator.of(context).push(MaterialPageRoute(
+          //       builder: (context) => CoinBuyScreen(),
+          //     ));
+          //     },
+          //     child: Container(
+          //       padding:
+          //           const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          //       decoration: BoxDecoration(
+          //         color: const Color(0xEBBD13), // Use color literal for clarity
+          //         borderRadius: BorderRadius.circular(16.0),
+          //       ),
+          //       child: Row(
+          //         mainAxisAlignment:
+          //             MainAxisAlignment.spaceBetween, // Align evenly
+          //         children: [
+          //           Container(
+          //             padding: EdgeInsets.all(5),
 
-                              final int coins = snapshot.data!['coins'] ?? 0;
-                              return Text(
-                                '$coins',
-                                style: const TextStyle(
-                                  color: Color.fromARGB(255, 88, 88, 88),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.add_circle_outline,
-                      color: Color.fromARGB(255, 138, 138, 138),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          //             child: Row(
+          //               children: [
+          //                 FaIcon(
+          //                   FontAwesomeIcons.coins,
+          //                   color: Color.fromARGB(255, 255, 187, 0),
+          //                 ),
+          //                 const SizedBox(width: 10.0), // Consistent spacing
+          //                 StreamBuilder<DocumentSnapshot>(
+          //                   stream: FirebaseFirestore.instance
+          //                       .collection('users_google')
+          //                       .doc(FirebaseAuth.instance.currentUser!.uid)
+          //                       .snapshots(),
+          //                   builder: (context, snapshot) {
+          //                     if (!snapshot.hasData) {
+          //                       return Text(
+          //                         'Loading...',
+          //                         style: const TextStyle(
+          //                             color: Color.fromARGB(255, 255, 230, 0)),
+          //                       );
+          //                     }
+
+          //                     final int coins = snapshot.data!['coins'] ?? 0;
+          //                     return Text(
+          //                       '$coins',
+          //                       style: const TextStyle(
+          //                         color: Color.fromARGB(255, 88, 88, 88),
+          //                       ),
+          //                     );
+          //                   },
+          //                 ),
+          //               ],
+          //             ),
+          //           ),
+          //           Icon(
+          //             Icons.add_circle_outline,
+          //             color: Color.fromARGB(255, 138, 138, 138),
+          //           ),
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           ListTile(
             leading:
@@ -257,12 +258,28 @@ class SideNav extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 4.0),
-                    Text(
-                      'App Version 1.0.0',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12.0,
-                      ),
+                    FutureBuilder<PackageInfo>(
+                      future: PackageInfo.fromPlatform(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${snapshot.error}'));
+                        } else {
+                          final packageInfo = snapshot.data!;
+                          return Center(
+                            child: Text(
+                              'App Version ${packageInfo.version}',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12.0,
+                              ),
+                            ),
+                          );
+                        }
+                      },
                     ),
                   ],
                 ),
