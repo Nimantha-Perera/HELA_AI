@@ -1,0 +1,56 @@
+on:
+  pull_request:
+    branches:
+      - feature
+      - 2nd-branch
+  push:
+    branches:
+      - feature
+      - 2nd-branch
+      - develop
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: macos-latest
+      
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '12'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+      
+      # - name: Build APK
+      #   run: flutter build apk --release --split-per-abi
+
+      - name: Build App Bundle
+        run: flutter build bundle --release  
+
+      # - name: Build iOS App
+      #   run: |
+      #     flutter build ios --no-codesign
+      #     cd build/ios/iphoneos
+      #     mkdir Payload
+      #     cd Payload
+      #     ln -s ../Runner.app
+      #     cd ..
+      #     zip -r app.ipa Payload
+
+      - name: Push to Releases
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            build/app/outputs/bundle/release/*.aab
+          tag: v1.0.${{ github.run_number }}
+          token: ${{ secrets.TOKEN }}
+    
