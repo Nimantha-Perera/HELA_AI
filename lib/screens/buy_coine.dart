@@ -58,31 +58,29 @@ class _CoinBuyScreenState extends State<CoinBuyScreen> {
                   (entry) => _buildPackageTile(entry.key, entry.value),
                 )
                 .toList(),
-           Center(
-  child: Padding(
-    padding: const EdgeInsets.all(20.0),
-    child: Column(
-      children: [
-        Text(
-          "Feel free to contact us for any payment related questions."
-        ),
-        GestureDetector(
-          onTap: () {
-            launch('mailto:nmadushanka867@gmail.com');
-          },
-          child: Text(
-            "nmadushanka867@gmail.com",
-            style: TextStyle(
-              color: Colors.blue,
-              decoration: TextDecoration.underline,
-            ),
-          ),
-        ),
-      ],
-    ),
-  ),
-)
-
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Text(
+                        "Feel free to contact us for any payment related questions."),
+                    GestureDetector(
+                      onTap: () {
+                        launch('mailto:nmadushanka867@gmail.com');
+                      },
+                      child: Text(
+                        "nmadushanka867@gmail.com",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
           ],
         ),
       ),
