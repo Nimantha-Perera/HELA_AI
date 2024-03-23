@@ -30,11 +30,11 @@ jobs:
           channel: 'stable'
           architecture: x64
       
-      - name: Build APK
-        run: flutter build apk --release --split-per-abi
+      # - name: Build APK
+      #   run: flutter build apk --release --split-per-abi
 
       - name: Build App Bundle
-        run: flutter build bundle --release  
+        run: flutter build appbundle --release  
 
       # - name: Build iOS App
       #   run: |
