@@ -33,32 +33,32 @@ void main() async {
 }
 
   // Check for updates
-var updateInfo = await InAppUpdate.checkForUpdate();
-if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
-  // Handle update available case
- void showUpdateDialog(BuildContext context) {
-  showDialog(
-    context: context, // Pass context as an argument here
-    builder: (BuildContext context) {
-      // Use the passed-in context here
-      return AlertDialog(
-        title: Text('Update Available'),
-        content: Text('A new version of the app is available.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close the dialog
-              update(context); // Call the update function
-            },
-            child: Text('Update Now'),
-          ),
-        ],
-      );
-    },
-  );
-}
+// var updateInfo = await InAppUpdate.checkForUpdate();
+// if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
+//   // Handle update available case
+//  void showUpdateDialog(BuildContext context) {
+//   showDialog(
+//     context: context, // Pass context as an argument here
+//     builder: (BuildContext context) {
+//       // Use the passed-in context here
+//       return AlertDialog(
+//         title: Text('Update Available'),
+//         content: Text('A new version of the app is available.'),
+//         actions: [
+//           TextButton(
+//             onPressed: () {
+//               Navigator.pop(context); // Close the dialog
+//               update(context); // Call the update function
+//             },
+//             child: Text('Update Now'),
+//           ),
+//         ],
+//       );
+//     },
+//   );
+// }
 
-} else {
+// } else {
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
@@ -66,7 +66,7 @@ if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
     ),
   );
 }
-}
+// }
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);

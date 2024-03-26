@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -34,6 +35,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart'; // Add this line for the platform channel
 import 'package:path/path.dart' as path;
+import 'package:url_launcher/url_launcher.dart';
 
 bool isTyping = false;
 bool isSpeaking = false;
@@ -450,97 +452,143 @@ class _HelaAIState extends State<HelaAI> {
   }
 
   // A function that handles the Gemini response by decoding the JSON, extracting specific parts, reconstructing the text with bold formatting using RichText widget, creating a RichText widget to display the formatted text, converting the RichText to a plain String, and finally calling the translateAndShowGeminiContent function with the plain text. It catches any errors that occur during the process and prints an error message.
-// void handleGeminiResponse(String responseBody) {
-//   try {
-//     var decodedValue = jsonDecode(responseBody);
-//     var candidates = decodedValue["candidates"];
-//     if (candidates != null && candidates.isNotEmpty) {
-//       var content = candidates[0]["content"];
-//       if (content != null) {
-//         var parts = content["parts"];
-//         if (parts != null && parts.isNotEmpty) {
-//           var result = parts[0]["text"];
-//           if (result != null) {
-//             // Split text at ** and store segments in a list
-//             List<String> textSegments = result.split("**");
+void handleGeminiResponse(String responseBody) {
+  try {
+    var decodedValue = jsonDecode(responseBody);
+    var candidates = decodedValue["candidates"];
+    if (candidates != null && candidates.isNotEmpty) {
+      var content = candidates[0]["content"];
+      if (content != null) {
+        var parts = content["parts"];
+        if (parts != null && parts.isNotEmpty) {
+          var text = parts[0]["text"];
+          if (text != null) {
+            // Split text at special characters and store segments in a list
+            List<String> textSegments = _splitTextByFormatting(text);
 
-//             // Reconstruct the text with bold formatting using RichText widget
-//             List<TextSpan> textSpans = [];
-//             for (int i = 0; i < textSegments.length; i++) {
-//               if (i % 2 == 1) {
-//                 // If it's an odd-indexed segment (bold part)
-//                 textSpans.add(TextSpan(
-//                   text: textSegments[i],
-//                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-//                 ));
-//               } else {
-//                 textSpans.add(TextSpan(
-//                   text: textSegments[i],
-//                   style: TextStyle(fontSize: 16, color: Colors.white),
-//                 ));
-//               }
-//             }
+            // Reconstruct the text with formatting using RichText widget
+            List<TextSpan> textSpans = [];
+            for (int i = 0; i < textSegments.length; i++) {
+              TextSpan span;
+              switch (textSegments[i][0]) {
+                case "*":  // Bold formatting
+                  span = TextSpan(
+                    text: textSegments[i].substring(1),
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  );
+                  break;
+                case "_":  // Italic formatting
+                  span = TextSpan(
+                    text: textSegments[i].substring(1),
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  );
+                  break;
+                case "`":  // Code formatting
+                  span = TextSpan(
+                    text: textSegments[i].substring(1),
+                    style: TextStyle(fontFamily: 'courier'),
+                  );
+                  break;
+                case "[":  // Link formatting (assuming format: [text](url))
+                  int closingBracketIndex = textSegments[i].indexOf("]");
+                  if (closingBracketIndex != -1 && textSegments[i].length > closingBracketIndex + 2) {
+                    String linkText = textSegments[i].substring(1, closingBracketIndex);
+                    String url = textSegments[i].substring(closingBracketIndex + 2);
+                    var textSpan = span = TextSpan(
+                      text: linkText,
+                      style: TextStyle(color: Colors.blue),
+                      recognizer: TapGestureRecognizer()..onTap = () => launch(url),
+                    );
+                  } else {
+                    span = TextSpan(text: textSegments[i]); // Handle invalid link format
+                  }
+                  break;
+                default:
+                  span = TextSpan(text: textSegments[i]);  // Normal text
+              }
+              textSpans.add(span);
+            }
 
-//             // Create a RichText widget to display the formatted text
-//             RichText richText = RichText(
-//               text: TextSpan(children: textSpans),
-//             );
+            // Create a RichText widget to display the formatted text
+            RichText richText = RichText(
+              text: TextSpan(children: textSpans),
+            );
 
-//             // Convert RichText to a plain String for the function call
-//             String plainText = richText.text.toPlainText();
+            // Convert RichText to a plain String for the function call (optional)
+            String plainText = richText.text.toPlainText();
 
-//             translateAndShowGeminiContent(plainText);
-//             return; // Return after successful processing
-//           }
-//         }
-//       }
-//     }
-//     // Handle case where the JSON structure doesn't match the expected format
-//     print("Error: Unable to find the required data in the response.");
-//   } catch (e) {
-//     // Handle any other errors that might occur during processing
-//     print("Error handling Gemini response: $e");
-//   }
-// }
-
-  void handleGeminiResponse(String responseBody) {
-    try {
-      var decodedValue = jsonDecode(responseBody);
-      var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
-
-      // Split text at ** and store segments in a list
-      List<String> textSegments = result.split("**");
-
-      // Reconstruct the text with bold formatting using RichText widget
-      List<TextSpan> textSpans = [];
-      for (int i = 0; i < textSegments.length; i++) {
-        if (i % 2 == 1) {
-          // If it's an odd-indexed segment (bold part)
-          textSpans.add(TextSpan(
-            text: textSegments[i],
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-          ));
-        } else {
-          textSpans.add(TextSpan(
-              text: textSegments[i],
-              style: TextStyle(fontSize: 16, color: Colors.white)));
-          print("error bold");
+            translateAndShowGeminiContent(plainText);
+            return; // Return after successful processing
+          }
         }
       }
+    }
+    // Handle case where the JSON structure doesn't match the expected format
+    print("Error: Unable to find the required data in the response.");
+  } catch (e) {
+    // Handle any other errors that might occur during processing
+    print("Error handling Gemini response: $e");
+  }
+}
 
-      // Create a RichText widget to display the formatted text
-      RichText richText = RichText(
-        text: TextSpan(children: textSpans),
-      );
-
-      // Convert RichText to a plain String for the function call
-      String plainText = richText.text.toPlainText();
-
-      translateAndShowGeminiContent(plainText);
-    } catch (e) {
-      print("Error handling Gemini response: $e");
+// Helper function to split text based on formatting characters
+List<String> _splitTextByFormatting(String text) {
+  List<String> segments = [];
+  int startIndex = 0;
+  for (int i = 0; i < text.length; i++) {
+    if (text[i] == "*" || text[i] == "_" || text[i] == "`" || text[i] == "[") {
+      if (startIndex < i) {
+        segments.add(text.substring(startIndex, i));
+      }
+      segments.add(text[i]);
+      startIndex = i + 1;
     }
   }
+  if (startIndex < text.length) {
+    segments.add(text.substring(startIndex));
+  }
+  return segments;
+}
+
+
+  // void handleGeminiResponse(String responseBody) {
+  //   try {
+  //     var decodedValue = jsonDecode(responseBody);
+  //     var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
+
+  //     // Split text at ** and store segments in a list
+  //     List<String> textSegments = result.split("**");
+
+  //     // Reconstruct the text with bold formatting using RichText widget
+  //     List<TextSpan> textSpans = [];
+  //     for (int i = 0; i < textSegments.length; i++) {
+  //       if (i % 2 == 1) {
+  //         // If it's an odd-indexed segment (bold part)
+  //         textSpans.add(TextSpan(
+  //           text: textSegments[i],
+  //           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+  //         ));
+  //       } else {
+  //         textSpans.add(TextSpan(
+  //             text: textSegments[i],
+  //             style: TextStyle(fontSize: 16, color: Colors.white)));
+  //         print("error bold");
+  //       }
+  //     }
+
+  //     // Create a RichText widget to display the formatted text
+  //     RichText richText = RichText(
+  //       text: TextSpan(children: textSpans),
+  //     );
+
+  //     // Convert RichText to a plain String for the function call
+  //     String plainText = richText.text.toPlainText();
+
+  //     translateAndShowGeminiContent(plainText);
+  //   } catch (e) {
+  //     print("Error handling Gemini response: $e");
+  //   }
+  // }
 
   Future<void> saveChatsToFile() async {
     try {

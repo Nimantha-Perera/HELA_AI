@@ -78,6 +78,7 @@ dependencies:
   in_app_purchase: ^3.1.13
   flutter_inapp_purchase: ^5.6.1
   package_info: ^2.0.2
+  gestures: ^1.0.0
 
 dev_dependencies:
   flutter_test:
