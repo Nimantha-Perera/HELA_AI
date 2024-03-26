@@ -450,6 +450,58 @@ class _HelaAIState extends State<HelaAI> {
   }
 
   // A function that handles the Gemini response by decoding the JSON, extracting specific parts, reconstructing the text with bold formatting using RichText widget, creating a RichText widget to display the formatted text, converting the RichText to a plain String, and finally calling the translateAndShowGeminiContent function with the plain text. It catches any errors that occur during the process and prints an error message.
+// void handleGeminiResponse(String responseBody) {
+//   try {
+//     var decodedValue = jsonDecode(responseBody);
+//     var candidates = decodedValue["candidates"];
+//     if (candidates != null && candidates.isNotEmpty) {
+//       var content = candidates[0]["content"];
+//       if (content != null) {
+//         var parts = content["parts"];
+//         if (parts != null && parts.isNotEmpty) {
+//           var result = parts[0]["text"];
+//           if (result != null) {
+//             // Split text at ** and store segments in a list
+//             List<String> textSegments = result.split("**");
+
+//             // Reconstruct the text with bold formatting using RichText widget
+//             List<TextSpan> textSpans = [];
+//             for (int i = 0; i < textSegments.length; i++) {
+//               if (i % 2 == 1) {
+//                 // If it's an odd-indexed segment (bold part)
+//                 textSpans.add(TextSpan(
+//                   text: textSegments[i],
+//                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+//                 ));
+//               } else {
+//                 textSpans.add(TextSpan(
+//                   text: textSegments[i],
+//                   style: TextStyle(fontSize: 16, color: Colors.white),
+//                 ));
+//               }
+//             }
+
+//             // Create a RichText widget to display the formatted text
+//             RichText richText = RichText(
+//               text: TextSpan(children: textSpans),
+//             );
+
+//             // Convert RichText to a plain String for the function call
+//             String plainText = richText.text.toPlainText();
+
+//             translateAndShowGeminiContent(plainText);
+//             return; // Return after successful processing
+//           }
+//         }
+//       }
+//     }
+//     // Handle case where the JSON structure doesn't match the expected format
+//     print("Error: Unable to find the required data in the response.");
+//   } catch (e) {
+//     // Handle any other errors that might occur during processing
+//     print("Error handling Gemini response: $e");
+//   }
+// }
 
   void handleGeminiResponse(String responseBody) {
     try {
