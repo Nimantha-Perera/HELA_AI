@@ -452,104 +452,17 @@ class _HelaAIState extends State<HelaAI> {
   }
 
   // A function that handles the Gemini response by decoding the JSON, extracting specific parts, reconstructing the text with bold formatting using RichText widget, creating a RichText widget to display the formatted text, converting the RichText to a plain String, and finally calling the translateAndShowGeminiContent function with the plain text. It catches any errors that occur during the process and prints an error message.
-void handleGeminiResponse(String responseBody) {
-  try {
-    var decodedValue = jsonDecode(responseBody);
-    var candidates = decodedValue["candidates"];
-    if (candidates != null && candidates.isNotEmpty) {
-      var content = candidates[0]["content"];
-      if (content != null) {
-        var parts = content["parts"];
-        if (parts != null && parts.isNotEmpty) {
-          var text = parts[0]["text"];
-          if (text != null) {
-            // Split text at special characters and store segments in a list
-            List<String> textSegments = _splitTextByFormatting(text);
+  void handleGeminiResponse(String responseBody) {
+    try {
+      var decodedValue = jsonDecode(responseBody);
+      var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
 
-            // Reconstruct the text with formatting using RichText widget
-            List<TextSpan> textSpans = [];
-            for (int i = 0; i < textSegments.length; i++) {
-              TextSpan span;
-              switch (textSegments[i][0]) {
-                case "*":  // Bold formatting
-                  span = TextSpan(
-                    text: textSegments[i].substring(1),
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  );
-                  break;
-                case "_":  // Italic formatting
-                  span = TextSpan(
-                    text: textSegments[i].substring(1),
-                    style: TextStyle(fontStyle: FontStyle.italic),
-                  );
-                  break;
-                case "`":  // Code formatting
-                  span = TextSpan(
-                    text: textSegments[i].substring(1),
-                    style: TextStyle(fontFamily: 'courier'),
-                  );
-                  break;
-                case "[":  // Link formatting (assuming format: [text](url))
-                  int closingBracketIndex = textSegments[i].indexOf("]");
-                  if (closingBracketIndex != -1 && textSegments[i].length > closingBracketIndex + 2) {
-                    String linkText = textSegments[i].substring(1, closingBracketIndex);
-                    String url = textSegments[i].substring(closingBracketIndex + 2);
-                    var textSpan = span = TextSpan(
-                      text: linkText,
-                      style: TextStyle(color: Colors.blue),
-                      recognizer: TapGestureRecognizer()..onTap = () => launch(url),
-                    );
-                  } else {
-                    span = TextSpan(text: textSegments[i]); // Handle invalid link format
-                  }
-                  break;
-                default:
-                  span = TextSpan(text: textSegments[i]);  // Normal text
-              }
-              textSpans.add(span);
-            }
-
-            // Create a RichText widget to display the formatted text
-            RichText richText = RichText(
-              text: TextSpan(children: textSpans),
-            );
-
-            // Convert RichText to a plain String for the function call (optional)
-            String plainText = richText.text.toPlainText();
-
-            translateAndShowGeminiContent(plainText);
-            return; // Return after successful processing
-          }
-        }
-      }
-    }
-    // Handle case where the JSON structure doesn't match the expected format
-    print("Error: Unable to find the required data in the response.");
-  } catch (e) {
-    // Handle any other errors that might occur during processing
-    print("Error handling Gemini response: $e");
-  }
-}
-
-// Helper function to split text based on formatting characters
-List<String> _splitTextByFormatting(String text) {
-  List<String> segments = [];
-  int startIndex = 0;
-  for (int i = 0; i < text.length; i++) {
-    if (text[i] == "*" || text[i] == "_" || text[i] == "`" || text[i] == "[") {
-      if (startIndex < i) {
-        segments.add(text.substring(startIndex, i));
-      }
-      segments.add(text[i]);
-      startIndex = i + 1;
+      // Call translateAndShowGeminiContent with the unformatted text
+      translateAndShowGeminiContent(result);
+    } catch (e) {
+      print("Error handling Gemini response: $e");
     }
   }
-  if (startIndex < text.length) {
-    segments.add(text.substring(startIndex));
-  }
-  return segments;
-}
-
 
   // void handleGeminiResponse(String responseBody) {
   //   try {
@@ -684,10 +597,15 @@ List<String> _splitTextByFormatting(String text) {
                           color: Color.fromARGB(255, 158, 158, 158),
                         ),
                       ),
-                      IconButton(onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => CoinBuyScreen()));  
-                      }, icon: Icon(Icons.add,size: 15,)),
+                      IconButton(
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => CoinBuyScreen()));
+                          },
+                          icon: Icon(
+                            Icons.add,
+                            size: 15,
+                          )),
                     ],
                   ),
                 ),
@@ -862,7 +780,7 @@ List<String> _splitTextByFormatting(String text) {
     "oya kwd haduwe",
     "ඔයා කවුද හැදුවෙ?"
   ];
-  List<String>guesses2 = [
+  List<String> guesses2 = [
     "කාසි ගන්නෙ කොහොමද?",
     "කාසි ගන්නෙ කොහොමද",
     "kaasi ganne kohomada?",
@@ -881,17 +799,14 @@ List<String> _splitTextByFormatting(String text) {
         setState(
             () {}); // Make sure to call setState to trigger a rebuild if needed
       });
-
     } else if (guesses2.contains(inputs)) {
-      
-     Future.delayed(Duration(seconds: 2), () {
+      Future.delayed(Duration(seconds: 2), () {
         translateAndShowGeminiContent(
             "කාසි ලබා ගැනීම සඳහා උඩ ඇති කාසි ප්‍රමාණය පෙන්වන තීරයෙහි + ලකුන මත ක්ලික් කරන්න.");
         typing.remove(helaAi);
         setState(
             () {}); // Make sure to call setState to trigger a rebuild if needed
       });
-
     } else {
       translateAndGenerateGeminiContent(inputs);
       typing.remove(helaAi);
@@ -929,6 +844,34 @@ class _ChatBubbleState extends State<ChatBubble> {
     final isCurrentUser = widget.message.user == you;
     final ThemeData theme = isCurrentUser ? lightTheme : darkTheme;
 
+
+     bool isBold = false; // Track if currently inside a bold text section
+    bool isItalic = false; // Track if currently inside an italic text section
+    bool isInCodeBlock = false; // Track if currently inside a code block
+
+    // Parse the message text for special formatting
+    List<InlineSpan> formattedTextSpans = [];
+    List<String> parts = widget.message.text
+        .split("**");
+   
+
+
+    for (int i = 0; i < parts.length; i++) {
+      if (i % 2 == 0) {
+        // Text outside the stars, add as normal text
+        formattedTextSpans.add(TextSpan(text: parts[i]));
+      } else {
+        // Text between the stars, add as bold text
+        formattedTextSpans.add(TextSpan(
+          text: parts[i],
+          style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255, 253, 204, 99)),
+        ));
+      }
+
+      
+    }
+    
+
     return ListTile(
       leading: isCurrentUser
           ? null
@@ -953,12 +896,14 @@ class _ChatBubbleState extends State<ChatBubble> {
                   ? theme.primaryColor
                   : theme.scaffoldBackgroundColor,
             ),
-            child: Text(
-              widget.message.text,
-              style: GoogleFonts.notoSerifSinhala(
-                color: isCurrentUser
-                    ? Colors.white
-                    : const Color.fromARGB(255, 255, 255, 255),
+            child: RichText(
+              text: TextSpan(
+                children: formattedTextSpans,
+                style: GoogleFonts.notoSerifSinhala(
+                  color: isCurrentUser
+                      ? Colors.white
+                      : const Color.fromARGB(255, 255, 255, 255),
+                ),
               ),
             ),
           ),
