@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:markdown/markdown.dart' as markdown;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
@@ -421,35 +423,67 @@ class _HelaAIState extends State<HelaAI> {
   }
 
 // Translates the given outputText to Sinhala and displays the translated content as a ChatMessage. It also updates the UI by inserting the ChatMessage at the beginning of the list and checks the auto voice setting to speak the translated text if enabled.
-  void translateAndShowGeminiContent(String outputText) {
-    // Using a translator to translate the outputText to Sinhala ('si')
-    translator.translate(outputText, to: 'si').then((value) async {
-      // Retrieve the translated text
-      String translatedText = value.toString();
+void translateAndShowGeminiContent(String outputText) {
+  // Using a translator to translate the outputText to Sinhala ('si')
+  translator.translate(outputText, to: 'si').then((value) async {
+    // Retrieve the translated text
+    String translatedText = value.toString();
 
-      // Print the translated text to the console
-      print(translatedText);
+    // Translate text within HTML tags
+    String translatedHtml = translateTextWithinHtml(translatedText);
 
-      // Display the translated content as a ChatMessage
-      ChatMessage m1 = ChatMessage(
-        user: helaAi,
-        createdAt: DateTime.now(),
-        text: translatedText,
-      );
+    // Print the translated HTML to the console
+    print(translatedHtml);
 
-      // Update the UI by inserting the ChatMessage at the beginning of the list
-      setState(() {
-        allMessages.insert(0, m1);
-        isTyping = false;
+    // Display the translated content as a ChatMessage
+    ChatMessage m1 = ChatMessage(
+      user: helaAi,
+      createdAt: DateTime.now(),
+      text: translatedHtml,
+    );
 
-        // Check the auto voice setting
-        if (_settingsManager.enableAutoVoice) {
-          // If auto voice is enabled, speak the translated text
-          speakSinhala(translatedText, _settingsManager);
-        }
-      });
+    // Update the UI by inserting the ChatMessage at the beginning of the list
+    setState(() {
+      allMessages.insert(0, m1);
+      isTyping = false;
+
+      // Check the auto voice setting
+      if (_settingsManager.enableAutoVoice) {
+        // If auto voice is enabled, speak the translated text
+        speakSinhala(translatedHtml, _settingsManager);
+      }
     });
-  }
+  });
+}
+
+// Function to translate text within HTML tags while preserving the HTML structure
+String translateTextWithinHtml(String htmlText) {
+  // Regular expression to match text within HTML tags
+  RegExp htmlPattern = RegExp(r">([^<]+)<");
+
+  // Replace text within HTML tags with translated text
+  String translatedHtml = htmlText.replaceAllMapped(htmlPattern, (match) {
+    String originalText = match.group(1)!;
+    // Translate the original text
+    String translatedText = translateOriginalText(originalText);
+    // Return translated text within HTML tags
+    return ">$translatedText<";
+  });
+
+  return translatedHtml;
+}
+
+// Function to translate the original text (excluding HTML tags)
+String translateOriginalText(String originalText) {
+  // Translate the original text using your preferred translation method
+  // For example, using a translation API or service
+  // Here, you can use your existing translation logic
+  // For demonstration, let's assume translation is done here directly
+  // You can replace this with your actual translation code
+  // For example:
+  // return translator.translate(originalText, to: 'si').then((value) => value.toString());
+  return "$originalText";
+}
 
   // A function that handles the Gemini response by decoding the JSON, extracting specific parts, reconstructing the text with bold formatting using RichText widget, creating a RichText widget to display the formatted text, converting the RichText to a plain String, and finally calling the translateAndShowGeminiContent function with the plain text. It catches any errors that occur during the process and prints an error message.
   void handleGeminiResponse(String responseBody) {
@@ -457,8 +491,11 @@ class _HelaAIState extends State<HelaAI> {
       var decodedValue = jsonDecode(responseBody);
       var result = decodedValue["candidates"][0]["content"]["parts"][0]["text"];
 
-      // Call translateAndShowGeminiContent with the unformatted text
-      translateAndShowGeminiContent(result);
+      // Convert Markdown to HTML
+      var htmlContent = markdown.markdownToHtml(result);
+
+      // Call translateAndShowGeminiContent with the HTML content
+      translateAndShowGeminiContent(htmlContent);
     } catch (e) {
       print("Error handling Gemini response: $e");
     }
@@ -844,33 +881,28 @@ class _ChatBubbleState extends State<ChatBubble> {
     final isCurrentUser = widget.message.user == you;
     final ThemeData theme = isCurrentUser ? lightTheme : darkTheme;
 
+    //  bool isBold = false; // Track if currently inside a bold text section
+    // bool isItalic = false; // Track if currently inside an italic text section
+    // bool isInCodeBlock = false; // Track if currently inside a code block
 
-     bool isBold = false; // Track if currently inside a bold text section
-    bool isItalic = false; // Track if currently inside an italic text section
-    bool isInCodeBlock = false; // Track if currently inside a code block
+    // // Parse the message text for special formatting
+    // List<InlineSpan> formattedTextSpans = [];
+    // List<String> parts = widget.message.text
+    //     .split("**");
 
-    // Parse the message text for special formatting
-    List<InlineSpan> formattedTextSpans = [];
-    List<String> parts = widget.message.text
-        .split("**");
-   
+    // for (int i = 0; i < parts.length; i++) {
+    //   if (i % 2 == 0) {
+    //     // Text outside the stars, add as normal text
+    //     formattedTextSpans.add(TextSpan(text: parts[i]));
+    //   } else {
+    //     // Text between the stars, add as bold text
+    //     formattedTextSpans.add(TextSpan(
+    //       text: parts[i],
+    //       style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255, 253, 204, 99)),
+    //     ));
+    //   }
 
-
-    for (int i = 0; i < parts.length; i++) {
-      if (i % 2 == 0) {
-        // Text outside the stars, add as normal text
-        formattedTextSpans.add(TextSpan(text: parts[i]));
-      } else {
-        // Text between the stars, add as bold text
-        formattedTextSpans.add(TextSpan(
-          text: parts[i],
-          style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255, 253, 204, 99)),
-        ));
-      }
-
-      
-    }
-    
+    // }
 
     return ListTile(
       leading: isCurrentUser
@@ -896,15 +928,16 @@ class _ChatBubbleState extends State<ChatBubble> {
                   ? theme.primaryColor
                   : theme.scaffoldBackgroundColor,
             ),
-            child: RichText(
-              text: TextSpan(
-                children: formattedTextSpans,
-                style: GoogleFonts.notoSerifSinhala(
+            child: Html(
+              data: widget.message.text,
+              style: {
+                "body": Style(
+                  fontFamily: GoogleFonts.notoSerifSinhala().fontFamily,
                   color: isCurrentUser
                       ? Colors.white
                       : const Color.fromARGB(255, 255, 255, 255),
                 ),
-              ),
+              },
             ),
           ),
           SizedBox(height: 4),
