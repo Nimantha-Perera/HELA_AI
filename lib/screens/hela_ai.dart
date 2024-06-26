@@ -75,6 +75,9 @@ class _HelaAIState extends State<HelaAI> {
 
   bool isFirstTime = true;
 
+  // Store the conversation history for multi-turn context
+  List<String> conversationHistory = [];
+
   void initState() {
     super.initState();
     checkAutoVoiceStatus();
@@ -278,61 +281,63 @@ class _HelaAIState extends State<HelaAI> {
       setState(() {
         String translatedText = value.toString();
         print(translatedText);
+        // Add the translated text to the conversation history
+        conversationHistory.add(translatedText);
         generateGeminiContent(translatedText);
       });
     });
   }
 
   //Gemini Pro Version
-  Future<void> generateGeminiProContent(String translatedText2) async {
-    final generationConfig = {
-      "temperature":
-          1, // Controls randomness (0.0 = deterministic, 1.0 = very random)
-      "topK": 1, // Restricts generation to top k most likely words at each step
-      "topP":
-          1.0, // Restricts generation to words with top cumulative probability
-      "maxOutputTokens": 2048, // Maximum number of tokens to be generated
-      // Add other configuration properties as needed (refer to Gemini API documentation)
-    };
+  // Future<void> generateGeminiProContent(String translatedText2) async {
+  //   final generationConfig = {
+  //     "temperature":
+  //         1, // Controls randomness (0.0 = deterministic, 1.0 = very random)
+  //     "topK": 1, // Restricts generation to top k most likely words at each step
+  //     "topP":
+  //         1.0, // Restricts generation to words with top cumulative probability
+  //     "maxOutputTokens": 2048, // Maximum number of tokens to be generated
+  //     // Add other configuration properties as needed (refer to Gemini API documentation)
+  //   };
 
-    isTyping = true;
-    final apiKey = dotenv.env['API_KEY'] ?? "";
-    final ourUrl =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
-    final header = {'Content-Type': 'application/json'};
-    final data = {
-      "contents": [
-        {
-          "parts": [
-            {"text": translatedText2}
-          ]
-        }
-      ],
-      "generationConfig": generationConfig,
-    };
+  //   isTyping = true;
+  //   final apiKey = dotenv.env['API_KEY'] ?? "";
+  //   final ourUrl =
+  //       "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey";
+  //   final header = {'Content-Type': 'application/json'};
+  //   final data = {
+  //     "contents": [
+  //       {
+  //         "parts": [
+  //           {"text": translatedText2}
+  //         ]
+  //       }
+  //     ],
+  //     "generationConfig": generationConfig,
+  //   };
 
-    try {
-      final response = await http.post(Uri.parse(ourUrl),
-          headers: header, body: jsonEncode(data));
+  //   try {
+  //     final response = await http.post(Uri.parse(ourUrl),
+  //         headers: header, body: jsonEncode(data));
 
-      if (response.statusCode == 200) {
-        handleGeminiResponse(response.body);
-      } else {
-        print("Error Occurred");
-        translateAndShowGeminiContent(
-            "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
-        isTyping = false;
-      }
-    } catch (e) {
-      print("Error Occurred: $e");
-      isTyping = false;
-      translateAndShowGeminiContent(
-          "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
-    }
-    typing.remove(helaAi);
+  //     if (response.statusCode == 200) {
+  //       handleGeminiResponse(response.body);
+  //     } else {
+  //       print("Error Occurred");
+  //       translateAndShowGeminiContent(
+  //           "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
+  //       isTyping = false;
+  //     }
+  //   } catch (e) {
+  //     print("Error Occurred: $e");
+  //     isTyping = false;
+  //     translateAndShowGeminiContent(
+  //         "යම් කිසි වැරැද්දක් ඇත කරුනාකර නැවත උතසාහ කරන්න");
+  //   }
+  //   typing.remove(helaAi);
 
-    isTyping = false;
-  }
+  //   isTyping = false;
+  // }
 
   //Gemini Normle Version
 

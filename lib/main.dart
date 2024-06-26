@@ -1,75 +1,63 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:hela_ai/screens/agreement.dart';
 import 'package:hela_ai/screens/hela_ai.dart';
 import 'package:hela_ai/screens/login_screen.dart';
 import 'package:hela_ai/themprovider/theam.dart';
-import 'package:hela_ai/update/update.dart';
-import 'package:in_app_update/in_app_update.dart';
 import 'package:provider/provider.dart';
 import 'package:hela_ai/themprovider/theamdata.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hela_ai/get_user_modal/user_modal.dart';
 
 void main() async {
-   
-   WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   
   // Load environment variables
   await dotenv.load(fileName: "assets/.env");
 
   // Initialize Firebase
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyC0aBHLzGXrStv-kmpTPncAMKO5k86QUt8",
+        authDomain: "helagpt.firebaseapp.com",
+        projectId: "helagpt",
+        storageBucket: "helagpt.appspot.com",
+        messagingSenderId: "189523470100",
+        appId: "1:189523470100:web:06827624d648b164c10401",
+        measurementId: "G-941Y2M39DK",
+      ),
+    );
+  }
 
- if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp( options: const FirebaseOptions(
-          apiKey: "AIzaSyC0aBHLzGXrStv-kmpTPncAMKO5k86QUt8",
-          authDomain: "helagpt.firebaseapp.com",
-          projectId: "helagpt",
-          storageBucket: "helagpt.appspot.com",
-          messagingSenderId: "189523470100",
-          appId: "1:189523470100:web:06827624d648b164c10401",
-          measurementId: "G-941Y2M39DK"));
-}
+  // Check if the user is already logged in
+  final prefs = await SharedPreferences.getInstance();
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-  // Check for updates
-// var updateInfo = await InAppUpdate.checkForUpdate();
-// if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
-//   // Handle update available case
-//  void showUpdateDialog(BuildContext context) {
-//   showDialog(
-//     context: context, // Pass context as an argument here
-//     builder: (BuildContext context) {
-//       // Use the passed-in context here
-//       return AlertDialog(
-//         title: Text('Update Available'),
-//         content: Text('A new version of the app is available.'),
-//         actions: [
-//           TextButton(
-//             onPressed: () {
-//               Navigator.pop(context); // Close the dialog
-//               update(context); // Call the update function
-//             },
-//             child: Text('Update Now'),
-//           ),
-//         ],
-//       );
-//     },
-//   );
-// }
+  UserModal? user;
+  if (isLoggedIn) {
+    String name = prefs.getString('name') ?? "";
+    String email = prefs.getString('email') ?? "";
+    String uid = prefs.getString('uid') ?? "";
+    String img_url = prefs.getString('img_url') ?? "";
 
-// } else {
+    if (name.isNotEmpty && email.isNotEmpty && uid.isNotEmpty) {
+      user = UserModal(name: name, email: email, img_url: img_url, uid: uid);
+    }
+  }
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
-      child: MyApp(),
+      child: MyApp(user: user),
     ),
   );
 }
-// }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final UserModal? user;
+
+  const MyApp({Key? key, this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -80,18 +68,9 @@ class MyApp extends StatelessWidget {
           darkTheme: darkTheme,
           themeMode: ThemeMode.system,
           debugShowCheckedModeBanner: false,
-          home: UserAgreement(),
+          home: user == null ? LoginScreen() : HelaAI(user: user!, img_url: user!.img_url),
         );
       },
     );
   }
 }
-
-
-
-
-
-
-
-
-

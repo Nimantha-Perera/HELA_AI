@@ -60,29 +60,29 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLoggedInUser();
+    // _checkLoggedInUser();
   }
 
-  Future<void> _checkLoggedInUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  // Future<void> _checkLoggedInUser() async {
+  // //   final prefs = await SharedPreferences.getInstance();
+  // //   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    print("Is User Logged In: $isLoggedIn");
+  // //   print("Is User Logged In: $isLoggedIn");
 
-    if (isLoggedIn) {
-      UserModal? user = await _fetchUserData();
-      print("User Data: $user"); // Add this line to check user data
+  // //   if (isLoggedIn) {
+  // //     UserModal? user = await _fetchUserData();
+  // //     print("User Data: $user"); // Add this line to check user data
 
-      if (user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HelaAI(user: user, img_url: user.img_url),
-          ),
-        );
-      }
-    }
-  }
+  // //     if (user != null) {
+  // //       Navigator.pushReplacement(
+  // //         context,
+  // //         MaterialPageRoute(
+  // //           builder: (context) => HelaAI(user: user, img_url: user.img_url),
+  // //         ),
+  // //       );
+  // //     }
+  // //   }
+  // // }
 
   Future<UserModal?> _handleSignIn() async {
     try {
